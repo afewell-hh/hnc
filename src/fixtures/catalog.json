@@ -1,0 +1,38 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2024-01-01T00:00:00Z",
+  "switches": [
+    {
+      "id": "DS2000",
+      "name": "DataSwitch 2000 Series",
+      "type": "leaf",
+      "maxPorts": 48,
+      "supportedSpeeds": ["10G", "25G"],
+      "manufacturer": "DataCorp",
+      "series": "DS2000",
+      "ports": [
+        {
+          "id": "port-1",
+          "speed": "10G",
+          "type": "ethernet"
+        }
+      ]
+    },
+    {
+      "id": "DS3000",
+      "name": "DataSwitch 3000 Series", 
+      "type": "spine",
+      "maxPorts": 32,
+      "supportedSpeeds": ["100G", "400G"],
+      "manufacturer": "DataCorp",
+      "series": "DS3000",
+      "ports": [
+        {
+          "id": "port-1",
+          "speed": "100G", 
+          "type": "fiber"
+        }
+      ]
+    }
+  ]
+}
