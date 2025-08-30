@@ -16,6 +16,8 @@ echo "== Unit tests =="
 npm test -- --run
 echo "== Storybook build =="
 npm run -s build-storybook
+echo "== Storybook test =="
+npm run -s test-storybook
 echo "== E2E =="
 npx playwright install --with-deps
 npm run -s e2e

@@ -1,6 +1,7 @@
 import { createMachine, assign, fromPromise } from 'xstate';
-import { FabricSpecSchema, generateWiringStub } from './app.state';
-import { computeDerived } from './domain/topology';
+import { FabricSpecSchema, generateWiringStub } from './app.state.js';
+import { computeDerived } from './domain/topology.js';
+import { saveFGD, loadFGD } from './io/fgd.js';
 export const fabricDesignMachine = createMachine({
     id: 'fabricDesign',
     initial: 'configuring',
@@ -8,7 +9,8 @@ export const fabricDesignMachine = createMachine({
         config: {},
         computedTopology: null,
         errors: [],
-        savedToFgd: false
+        savedToFgd: false,
+        loadedDiagram: null
     },
     states: {
         configuring: {
@@ -58,8 +60,12 @@ export const fabricDesignMachine = createMachine({
                         config: {},
                         computedTopology: null,
                         errors: [],
-                        savedToFgd: false
+                        savedToFgd: false,
+                        loadedDiagram: null
                     })
+                },
+                LOAD_FROM_FGD: {
+                    target: 'loading'
                 }
             }
         },
@@ -108,7 +114,8 @@ export const fabricDesignMachine = createMachine({
                         config: {},
                         computedTopology: null,
                         errors: [],
-                        savedToFgd: false
+                        savedToFgd: false,
+                        loadedDiagram: null
                     })
                 }
             }
@@ -129,7 +136,34 @@ export const fabricDesignMachine = createMachine({
                         config: {},
                         computedTopology: null,
                         errors: [],
-                        savedToFgd: false
+                        savedToFgd: false,
+                        loadedDiagram: null
+                    })
+                }
+            }
+        },
+        loading: {
+            invoke: {
+                id: 'loadFgd',
+                src: fromPromise(async ({ input }) => {
+                    const result = await loadFGD({ fabricId: input.fabricId });
+                    if (!result.success) {
+                        throw new Error(result.error || 'Failed to load from FGD');
+                    }
+                    return { success: true, diagram: result.diagram };
+                }),
+                input: ({ event }) => ({ fabricId: event.fabricId }),
+                onDone: {
+                    target: 'loaded',
+                    actions: assign({
+                        loadedDiagram: ({ event }) => event.output.diagram,
+                        errors: []
+                    })
+                },
+                onError: {
+                    target: 'configuring',
+                    actions: assign({
+                        errors: ({ event }) => [`Failed to load from FGD: ${event.error?.message || 'Unknown error'}`]
                     })
                 }
             }
@@ -138,13 +172,19 @@ export const fabricDesignMachine = createMachine({
             invoke: {
                 id: 'saveFgd',
                 src: fromPromise(async ({ input }) => {
-                    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate FGD save
                     if (!input.context.computedTopology?.isValid) {
                         throw new Error('Invalid topology cannot be saved');
                     }
                     const config = FabricSpecSchema.parse(input.context.config);
                     const wiringDiagram = generateWiringStub(config, input.context.computedTopology);
-                    return { success: true, fgdId: `fgd-${Date.now()}`, wiringDiagram };
+                    // Save to actual FGD files
+                    const result = await saveFGD(wiringDiagram, {
+                        fabricId: config.name || `fabric-${Date.now()}`
+                    });
+                    if (!result.success) {
+                        throw new Error(result.error || 'Failed to save to FGD');
+                    }
+                    return { success: true, fgdId: result.fgdId, wiringDiagram };
                 }),
                 input: ({ context }) => ({ context }),
                 onDone: { target: 'saved', actions: assign({ savedToFgd: true, errors: [] }) },
@@ -170,7 +210,35 @@ export const fabricDesignMachine = createMachine({
                         config: {},
                         computedTopology: null,
                         errors: [],
-                        savedToFgd: false
+                        savedToFgd: false,
+                        loadedDiagram: null
+                    })
+                }
+            }
+        },
+        loaded: {
+            on: {
+                UPDATE_CONFIG: {
+                    target: 'configuring',
+                    actions: assign({
+                        config: ({ context, event }) => ({ ...context.config, ...event.data }),
+                        computedTopology: null,
+                        errors: [],
+                        savedToFgd: false,
+                        loadedDiagram: null
+                    })
+                },
+                LOAD_FROM_FGD: {
+                    target: 'loading'
+                },
+                RESET: {
+                    target: 'configuring',
+                    actions: assign({
+                        config: {},
+                        computedTopology: null,
+                        errors: [],
+                        savedToFgd: false,
+                        loadedDiagram: null
                     })
                 }
             }

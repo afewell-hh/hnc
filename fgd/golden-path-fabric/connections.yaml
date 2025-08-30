@@ -1,0 +1,61 @@
+connections:
+  - from:
+      device: leaf-1
+      port: uplink-1
+    to:
+      device: spine-1
+      port: downlink-1
+    type: uplink
+  - from:
+      device: leaf-1
+      port: uplink-2
+    to:
+      device: spine-1
+      port: downlink-2
+    type: uplink
+  - from:
+      device: leaf-1
+      port: uplink-3
+    to:
+      device: spine-1
+      port: downlink-3
+    type: uplink
+  - from:
+      device: leaf-1
+      port: uplink-4
+    to:
+      device: spine-1
+      port: downlink-4
+    type: uplink
+  - from:
+      device: leaf-1
+      port: uplink-5
+    to:
+      device: spine-1
+      port: downlink-5
+    type: uplink
+  - from:
+      device: leaf-1
+      port: uplink-6
+    to:
+      device: spine-1
+      port: downlink-6
+    type: uplink
+  - from:
+      device: leaf-1
+      port: uplink-7
+    to:
+      device: spine-1
+      port: downlink-7
+    type: uplink
+  - from:
+      device: leaf-1
+      port: uplink-8
+    to:
+      device: spine-1
+      port: downlink-8
+    type: uplink
+metadata:
+  fabricName: golden-path-fabric
+  generatedAt: "2025-08-30T22:13:50.101Z"
+  totalConnections: 8

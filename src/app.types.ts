@@ -53,12 +53,14 @@ export interface FabricDesignContext {
   computedTopology: DerivedTopology | null
   errors: string[]
   savedToFgd: boolean
+  loadedDiagram: WiringDiagram | null
 }
 
 export type FabricDesignEvent =
   | { type: 'UPDATE_CONFIG'; data: Partial<FabricSpec> }
   | { type: 'COMPUTE_TOPOLOGY' }
   | { type: 'SAVE_TO_FGD' }
+  | { type: 'LOAD_FROM_FGD'; fabricId: string }
   | { type: 'RESET' }
 
 // Fabric specification type (derived from Zod schema)

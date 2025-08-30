@@ -1,13 +1,43 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useMachine } from '@xstate/react'
+import { workspaceMachine } from './workspace.machine'
 import { fabricDesignMachine } from './app.machine'
+import { FabricList } from './FabricList'
+import { DriftSection } from './drift/DriftSection.js'
+import { detectDrift } from './drift/detector.js'
+import type { DriftStatus } from './drift/types.js'
 
-function App() {
+function FabricDesigner({ fabricId, onBackToList }: { fabricId: string; onBackToList: () => void }) {
   const [state, send] = useMachine(fabricDesignMachine)
+  const [driftStatus, setDriftStatus] = useState<DriftStatus | null>(null)
+  const [isCheckingDrift, setIsCheckingDrift] = useState(false)
 
   return (
     <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
-      <h1>HNC Fabric Designer v0.1</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+        <h1>HNC Fabric Designer v0.2</h1>
+        <button
+          onClick={onBackToList}
+          style={{
+            padding: '0.5rem 1rem',
+            backgroundColor: '#757575',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}
+        >
+          ← Back to List
+        </button>
+      </div>
+
+      {/* Drift Detection Section */}
+      <DriftSection
+        fabricId={fabricId}
+        driftStatus={driftStatus}
+        onRefreshDrift={handleCheckDrift}
+        isRefreshing={isCheckingDrift}
+      />
       
       <div style={{ marginBottom: '1rem' }}>
         <label>
@@ -122,9 +152,91 @@ function App() {
       )}
 
       <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '2rem' }}>
-        State: {String(state.value)} | Config: {JSON.stringify(state.context.config)}
+        Fabric ID: {fabricId} | State: {String(state.value)} | Config: {JSON.stringify(state.context.config)}
       </div>
     </div>
+  )
+
+  // Drift checking function
+  async function handleCheckDrift() {
+    if (!state.context.loadedDiagram) {
+      setDriftStatus({
+        hasDrift: false,
+        driftSummary: ['No topology loaded - cannot check drift'],
+        lastChecked: new Date(),
+        affectedFiles: []
+      })
+      return
+    }
+
+    setIsCheckingDrift(true)
+    try {
+      const result = await detectDrift(fabricId, state.context.loadedDiagram)
+      setDriftStatus(result)
+    } catch (error) {
+      setDriftStatus({
+        hasDrift: false,
+        driftSummary: [`Error checking drift: ${error instanceof Error ? error.message : 'Unknown error'}`],
+        lastChecked: new Date(),
+        affectedFiles: []
+      })
+    } finally {
+      setIsCheckingDrift(false)
+    }
+  }
+}
+
+function App() {
+  const [workspaceState, workspaceSend] = useMachine(workspaceMachine)
+
+  const handleCreateFabric = (name: string) => {
+    workspaceSend({ type: 'CREATE_FABRIC', name })
+  }
+
+  const handleSelectFabric = (fabricId: string) => {
+    workspaceSend({ type: 'SELECT_FABRIC', fabricId })
+  }
+
+  const handleDeleteFabric = (fabricId: string) => {
+    workspaceSend({ type: 'DELETE_FABRIC', fabricId })
+  }
+
+  const handleBackToList = () => {
+    workspaceSend({ type: 'BACK_TO_LIST' })
+  }
+
+  const handleCheckDrift = async (fabricId: string) => {
+    // This would check drift for a specific fabric in the workspace
+    console.log(`Checking drift for fabric: ${fabricId}`)
+    // Implementation would depend on having access to the fabric's current state
+  }
+
+  const handleViewDriftDetails = () => {
+    // This could open a modal or navigate to a dedicated drift view
+    console.log('Opening drift details view')
+  }
+
+  // Route based on workspace state
+  if (workspaceState.matches('selected') && workspaceState.context.selectedFabricId) {
+    return (
+      <FabricDesigner 
+        fabricId={workspaceState.context.selectedFabricId}
+        onBackToList={handleBackToList}
+      />
+    )
+  }
+
+  return (
+    <FabricList
+      fabrics={workspaceState.context.fabrics}
+      onCreateFabric={handleCreateFabric}
+      onSelectFabric={handleSelectFabric}
+      onDeleteFabric={handleDeleteFabric}
+      onCheckDrift={handleCheckDrift}
+      onViewDriftDetails={handleViewDriftDetails}
+      errors={workspaceState.context.errors}
+      isCreating={workspaceState.matches('creating')}
+    />
   )
 }
 

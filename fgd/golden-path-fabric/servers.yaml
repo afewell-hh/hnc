@@ -1,0 +1,76 @@
+metadata:
+  generatedAt: "2025-08-30T22:13:50.101Z"
+  totalServers: 24
+servers:
+  - connections: 2
+    id: server-1
+    type: compute-standard
+  - connections: 2
+    id: server-10
+    type: compute-standard
+  - connections: 2
+    id: server-11
+    type: compute-standard
+  - connections: 2
+    id: server-12
+    type: compute-standard
+  - connections: 2
+    id: server-13
+    type: compute-standard
+  - connections: 2
+    id: server-14
+    type: compute-standard
+  - connections: 2
+    id: server-15
+    type: compute-standard
+  - connections: 2
+    id: server-16
+    type: compute-standard
+  - connections: 2
+    id: server-17
+    type: compute-standard
+  - connections: 2
+    id: server-18
+    type: compute-standard
+  - connections: 2
+    id: server-19
+    type: compute-standard
+  - connections: 2
+    id: server-2
+    type: compute-standard
+  - connections: 2
+    id: server-20
+    type: compute-standard
+  - connections: 2
+    id: server-21
+    type: compute-standard
+  - connections: 2
+    id: server-22
+    type: compute-standard
+  - connections: 2
+    id: server-23
+    type: compute-standard
+  - connections: 2
+    id: server-24
+    type: compute-standard
+  - connections: 2
+    id: server-3
+    type: compute-standard
+  - connections: 2
+    id: server-4
+    type: compute-standard
+  - connections: 2
+    id: server-5
+    type: compute-standard
+  - connections: 2
+    id: server-6
+    type: compute-standard
+  - connections: 2
+    id: server-7
+    type: compute-standard
+  - connections: 2
+    id: server-8
+    type: compute-standard
+  - connections: 2
+    id: server-9
+    type: compute-standard
