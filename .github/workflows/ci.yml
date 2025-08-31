@@ -1,34 +1,54 @@
 name: ci
-on: [push, pull_request]
-
-env:
-  NODE_VERSION: '20'
+on: 
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      enable_hhfab_validation:
+        description: 'Enable HHFab validation'
+        required: false
+        default: 'false'
+        type: boolean
+      enable_k8s_validation:
+        description: 'Enable K8s validation'
+        required: false
+        default: 'false'
+        type: boolean
+      enable_integration:
+        description: 'Enable integration tests'
+        required: false
+        default: 'false'
+        type: boolean
 
 jobs:
-  # Core CI pipeline - always runs (hermetic)
+  # Core CI pipeline - matrix for Node 18 & 20
   core-tests:
-    name: Core Tests
+    name: Core Tests (Node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: ['18', '20']
+      fail-fast: false
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         
-      - name: Setup Node.js
+      - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: ${{ matrix.node-version }}
           cache: 'npm'
           
       - name: Install dependencies
         run: npm ci
         
       - name: TypeScript type checking
-        run: npx tsc --noEmit
+        run: npm run typecheck
         
       - name: Build application
         run: npm run build
         
-      - name: Run unit tests
+      - name: Run unit tests (including property tests)
         run: npm test -- --run
         
       - name: Install Playwright browsers
@@ -45,7 +65,7 @@ jobs:
 
   # Optional GitHub integration tests (only when secrets exist)
   integration-github:
-    name: GitHub Integration
+    name: GitHub Integration (Node 20)
     runs-on: ubuntu-latest
     needs: core-tests
     if: ${{ secrets.GITHUB_TOKEN && vars.GIT_REMOTE }}
@@ -54,10 +74,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         
-      - name: Setup Node.js
+      - name: Setup Node.js 20
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: '20'
           cache: 'npm'
           
       - name: Install dependencies
@@ -72,7 +92,7 @@ jobs:
         
   # Optional K8s integration tests (only when kubeconfig exists)
   integration-k8s:
-    name: K8s Integration
+    name: K8s Integration (Node 20)
     runs-on: ubuntu-latest
     needs: core-tests
     if: ${{ secrets.KUBECONFIG || github.event.inputs.enable_k8s_validation == 'true' }}
@@ -81,10 +101,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         
-      - name: Setup Node.js
+      - name: Setup Node.js 20
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: '20'
           cache: 'npm'
           
       - name: Install dependencies
@@ -113,4 +133,54 @@ jobs:
       - name: Run K8s integration tests
         env:
           FEATURE_K8S: 'true'
-        run: npm run k8s:validate
+        run: npm run int:k8s:ci
+
+  # Optional HHFab validation (only when enabled)
+  validation-hhfab:
+    name: HHFab Validation (Node 20)
+    runs-on: ubuntu-latest
+    needs: core-tests
+    if: ${{ vars.ENABLE_HHFAB_VALIDATION == 'true' || vars.HHFAB || github.event.inputs.enable_hhfab_validation == 'true' }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run HHFab validation tests
+        env:
+          HHFAB: ${{ vars.HHFAB || '/usr/local/bin/hhfab' }}
+        run: npm run validate:hhfab:ci
+
+  # Optional K8s validation (dry-run only, no cluster required)
+  validation-k8s:
+    name: K8s Validation (Node 20)
+    runs-on: ubuntu-latest
+    needs: core-tests
+    if: ${{ vars.ENABLE_K8S_VALIDATION == 'true' || github.event.inputs.enable_k8s_validation == 'true' }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run K8s validation tests
+        env:
+          FEATURE_K8S: 'true'
+        run: npm run validate:k8s:ci
