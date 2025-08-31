@@ -46,3 +46,8 @@ claude-flow
 claude-flow.bat
 claude-flow.ps1
 hive-mind-prompt-*.txt
+
+#Secrets
+.env
+.env.local
+.env.*.local.env
