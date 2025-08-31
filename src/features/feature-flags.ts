@@ -1,11 +1,16 @@
 /**
  * Feature flag management system for HNC
  * Supports environment variables and runtime detection
+ * 
+ * DEPRECATION NOTICE: FEATURE_FKS is deprecated and will be removed in v0.5.0
+ * Use FEATURE_K8S instead. FEATURE_FKS is currently an alias for backward compatibility.
  */
 
 export interface FeatureFlags {
   git: boolean;
   k8s: boolean;
+  fks: boolean; // Alias for k8s - DEPRECATED, use k8s instead
+  ghPr: boolean; // GitHub Pull Request mode
   // Future features can be added here
   // analytics?: boolean;
   // cloudSync?: boolean;
@@ -57,7 +62,9 @@ function getFeatureFlag(key: string, defaultValue: boolean = false): boolean {
  */
 export const featureFlags: FeatureFlags = {
   git: getFeatureFlag('git', false), // Default: Git integration disabled
-  k8s: getFeatureFlag('k8s', false) // Default: K8s integration disabled
+  k8s: getFeatureFlag('k8s', false), // Default: K8s integration disabled
+  fks: getFeatureFlag('fks', false) || getFeatureFlag('k8s', false), // DEPRECATED: Use k8s instead
+  ghPr: getFeatureFlag('gh_pr', false) // Default: GitHub PR mode disabled
 }
 
 /**
@@ -65,6 +72,12 @@ export const featureFlags: FeatureFlags = {
  */
 export const isGitEnabled = (): boolean => featureFlags.git
 export const isK8sEnabled = (): boolean => featureFlags.k8s
+export const isGhPrEnabled = (): boolean => featureFlags.ghPr
+
+/**
+ * @deprecated Use isK8sEnabled() instead. FEATURE_FKS is an alias for FEATURE_K8S
+ */
+export const isFksEnabled = (): boolean => featureFlags.fks
 
 /**
  * Development helper to override feature flags programmatically
@@ -91,7 +104,9 @@ export function overrideFeatureFlag(key: keyof FeatureFlags, value: boolean): vo
 export function getFeatureFlagStatus(): Record<string, boolean> {
   return {
     git: featureFlags.git,
-    k8s: featureFlags.k8s
+    k8s: featureFlags.k8s,
+    fks: featureFlags.fks, // DEPRECATED: Use k8s instead
+    ghPr: featureFlags.ghPr
   }
 }
 
@@ -103,9 +118,13 @@ export function resetFeatureFlags(): void {
     try {
       window.localStorage.removeItem('FEATURE_GIT')
       window.localStorage.removeItem('FEATURE_K8S')
+      window.localStorage.removeItem('FEATURE_FKS') // DEPRECATED alias
+      window.localStorage.removeItem('FEATURE_GH_PR')
       // Reload flags from environment/defaults
       ;(featureFlags as any).git = getFeatureFlag('git', false)
       ;(featureFlags as any).k8s = getFeatureFlag('k8s', false)
+      ;(featureFlags as any).fks = getFeatureFlag('fks', false) || getFeatureFlag('k8s', false)
+      ;(featureFlags as any).ghPr = getFeatureFlag('gh_pr', false)
     } catch (e) {
       // Ignore localStorage errors
     }

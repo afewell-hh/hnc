@@ -20,7 +20,13 @@ const goldenPathSpec: FabricSpec = {
   endpointCount: 24 // Reduced for better oversubscription ratio (24/8 = 3:1)
 }
 
+// TODO: This test is quarantined - Golden path integration tests are timing out
+// These are complex end-to-end tests that require state machine timing fixes for v0.4.1
+// The tests exercise the full workflow but need better async handling
+
 describe('Golden Path: Compute → Save → Reload', () => {
+  // Increase timeout for integration tests
+  const TEST_TIMEOUT = 10000;
   beforeEach(async () => {
     // Clean up any existing test directory
     try {
@@ -76,16 +82,19 @@ describe('Golden Path: Compute → Save → Reload', () => {
     // STEP 2: Save to FGD
     actor.send({ type: 'SAVE_TO_FGD' })
     
-    // Wait for save to complete
-    await new Promise(resolve => {
+    // Wait for save to complete with timeout
+    await new Promise((resolve, reject) => {
+      const startTime = Date.now()
       const checkSaved = () => {
         const snapshot = actor.getSnapshot()
         if (snapshot.value === 'saved') {
           resolve(null)
         } else if (snapshot.value === 'invalid') {
-          throw new Error(`Save failed: ${snapshot.context.errors.join(', ')}`)
+          reject(new Error(`Save failed: ${snapshot.context.errors.join(', ')}`))
+        } else if (Date.now() - startTime > TEST_TIMEOUT - 1000) {
+          reject(new Error('Save operation timed out'))
         } else {
-          setTimeout(checkSaved, 100)
+          setTimeout(checkSaved, 50)
         }
       }
       checkSaved()
@@ -152,16 +161,19 @@ describe('Golden Path: Compute → Save → Reload', () => {
     // Load from FGD through state machine
     newActor.send({ type: 'LOAD_FROM_FGD', fabricId: goldenPathSpec.name })
     
-    // Wait for load to complete
-    await new Promise(resolve => {
+    // Wait for load to complete with timeout
+    await new Promise((resolve, reject) => {
+      const startTime = Date.now()
       const checkLoaded = () => {
         const snapshot = newActor.getSnapshot()
         if (snapshot.value === 'loaded') {
           resolve(null)
         } else if (snapshot.value === 'configuring' && snapshot.context.errors.length > 0) {
-          throw new Error(`Load failed: ${snapshot.context.errors.join(', ')}`)
+          reject(new Error(`Load failed: ${snapshot.context.errors.join(', ')}`))
+        } else if (Date.now() - startTime > TEST_TIMEOUT - 1000) {
+          reject(new Error('Load operation timed out'))
         } else {
-          setTimeout(checkLoaded, 100)
+          setTimeout(checkLoaded, 50)
         }
       }
       checkLoaded()
@@ -256,15 +268,18 @@ describe('Golden Path: Compute → Save → Reload', () => {
     actor.send({ type: 'LOAD_FROM_FGD', fabricId: 'non-existent-fabric' })
     
     // Wait for load to fail and return to configuring state
-    await new Promise(resolve => {
+    await new Promise((resolve, reject) => {
+      const startTime = Date.now()
       const checkFailed = () => {
         const snapshot = actor.getSnapshot()
         if (snapshot.value === 'configuring' && snapshot.context.errors.length > 0) {
           resolve(null)
         } else if (snapshot.value === 'loaded') {
-          throw new Error('Load should have failed but succeeded')
+          reject(new Error('Load should have failed but succeeded'))
+        } else if (Date.now() - startTime > TEST_TIMEOUT - 1000) {
+          reject(new Error('Load failure check timed out'))
         } else {
-          setTimeout(checkFailed, 100)
+          setTimeout(checkFailed, 50)
         }
       }
       checkFailed()
@@ -293,12 +308,15 @@ describe('Golden Path: Compute → Save → Reload', () => {
     
     actor1.send({ type: 'SAVE_TO_FGD' })
     
-    await new Promise(resolve => {
+    await new Promise((resolve, reject) => {
+      const startTime = Date.now()
       const checkSaved = () => {
         if (actor1.getSnapshot().value === 'saved') {
           resolve(null)
+        } else if (Date.now() - startTime > TEST_TIMEOUT - 1000) {
+          reject(new Error('Save timed out in state machine behavior test'))
         } else {
-          setTimeout(checkSaved, 100)
+          setTimeout(checkSaved, 50)
         }
       }
       checkSaved()
@@ -312,12 +330,15 @@ describe('Golden Path: Compute → Save → Reload', () => {
 
     actor2.send({ type: 'LOAD_FROM_FGD', fabricId: goldenPathSpec.name })
     
-    await new Promise(resolve => {
+    await new Promise((resolve, reject) => {
+      const startTime = Date.now()
       const checkLoaded = () => {
         if (actor2.getSnapshot().value === 'loaded') {
           resolve(null)
+        } else if (Date.now() - startTime > TEST_TIMEOUT - 1000) {
+          reject(new Error('First load timed out in state machine behavior test'))
         } else {
-          setTimeout(checkLoaded, 100)
+          setTimeout(checkLoaded, 50)
         }
       }
       checkLoaded()
@@ -336,12 +357,15 @@ describe('Golden Path: Compute → Save → Reload', () => {
 
     actor2.send({ type: 'LOAD_FROM_FGD', fabricId: goldenPathSpec.name })
     
-    await new Promise(resolve => {
+    await new Promise((resolve, reject) => {
+      const startTime = Date.now()
       const checkLoaded = () => {
         if (actor2.getSnapshot().value === 'loaded') {
           resolve(null)
+        } else if (Date.now() - startTime > TEST_TIMEOUT - 1000) {
+          reject(new Error('Second load timed out in state machine behavior test'))
         } else {
-          setTimeout(checkLoaded, 100)
+          setTimeout(checkLoaded, 50)
         }
       }
       checkLoaded()

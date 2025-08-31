@@ -1,5 +1,26 @@
-connections: []
+connections:
+  - from:
+      device: leaf-1
+      port: 2/1
+    to:
+      device: spine-1
+      port: 1/1
+    type: uplink
+  - from:
+      device: leaf-1
+      port: 2/2
+    to:
+      device: spine-1
+      port: 1/2
+    type: uplink
+  - from:
+      device: srv-default-server-1
+      port: eth0
+    to:
+      device: leaf-1
+      port: 1/1
+    type: endpoint
 metadata:
-  fabricName: test-fabric
-  generatedAt: "2025-08-31T05:12:07.210Z"
-  totalConnections: 0
+  fabricName: FGD Write Test
+  generatedAt: "2025-08-31T16:54:38.422Z"
+  totalConnections: 3

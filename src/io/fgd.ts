@@ -172,8 +172,9 @@ class NodeFGD implements FGDPlatform {
   }
 
   join(...paths: string[]): string {
-    const pathModule = require('path')
-    return pathModule.join(...paths)
+    // ES module compatible path joining for Node.js
+    // Use posix-style joining that works across platforms
+    return paths.join('/').replace(/\/+/g, '/').replace(/\/$/, '') || '/'
   }
 }
 

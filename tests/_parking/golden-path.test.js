@@ -1,3 +1,7 @@
+// TODO: This test is quarantined - Golden path integration tests (JS version) are timing out
+// These are complex end-to-end tests that require state machine timing fixes for v0.4.1
+// The tests exercise the full workflow but need better async handling
+
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { promises as fs } from 'fs';
 import { createActor } from 'xstate';

@@ -1,0 +1,153 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Rules Snapshot Tests - Canonical Specs to Expected Issue Codes > ES_LAG_SINGLE_NIC scenarios > should detect ES-LAG with default single NIC in legacy mode > es-lag-single-nic-legacy 1`] = `
+{
+  "errorCodes": [],
+  "infoCodes": [],
+  "warningCodes": [
+    "ES_LAG_SINGLE_NIC",
+  ],
+}
+`;
+
+exports[`Rules Snapshot Tests - Canonical Specs to Expected Issue Codes > ES_LAG_SINGLE_NIC scenarios > should detect ES-LAG with single NIC in multi-class > es-lag-single-nic 1`] = `
+{
+  "errorCodes": [],
+  "infoCodes": [],
+  "warningCodes": [
+    "ES_LAG_SINGLE_NIC",
+  ],
+}
+`;
+
+exports[`Rules Snapshot Tests - Canonical Specs to Expected Issue Codes > Edge cases and boundary conditions > should handle missing switch models gracefully > missing-models-graceful 1`] = `
+{
+  "errorCodes": [],
+  "infoCodes": [],
+  "warningCodes": [],
+}
+`;
+
+exports[`Rules Snapshot Tests - Canonical Specs to Expected Issue Codes > Edge cases and boundary conditions > should handle single spine scenarios (no divisibility warnings) > single-spine-no-divisibility-warning 1`] = `
+{
+  "errorCodes": [],
+  "infoCodes": [],
+  "warningCodes": [],
+}
+`;
+
+exports[`Rules Snapshot Tests - Canonical Specs to Expected Issue Codes > LEAF_CAPACITY_EXCEEDED scenarios > should detect leaf capacity exceeded - small leaves high demand > leaf-capacity-exceeded-high-density 1`] = `
+{
+  "errorCodes": [
+    "LEAF_CAPACITY_EXCEEDED",
+  ],
+  "infoCodes": [],
+  "warningCodes": [
+    "MODEL_PROFILE_MISMATCH",
+  ],
+}
+`;
+
+exports[`Rules Snapshot Tests - Canonical Specs to Expected Issue Codes > MC_LAG_ODD_LEAFS scenarios > should detect MC-LAG with odd leaf count > mc-lag-odd-leafs 1`] = `
+{
+  "errorCodes": [],
+  "infoCodes": [],
+  "warningCodes": [
+    "MC_LAG_ODD_LEAFS",
+  ],
+}
+`;
+
+exports[`Rules Snapshot Tests - Canonical Specs to Expected Issue Codes > MC_LAG_ODD_LEAFS scenarios > should detect MC-LAG with single leaf > mc-lag-single-leaf 1`] = `
+{
+  "errorCodes": [],
+  "infoCodes": [],
+  "warningCodes": [
+    "MC_LAG_ODD_LEAFS",
+  ],
+}
+`;
+
+exports[`Rules Snapshot Tests - Canonical Specs to Expected Issue Codes > MODEL_PROFILE_MISMATCH scenarios > should detect leaf model not optimized for server connectivity > model-profile-mismatch-leaf 1`] = `
+{
+  "errorCodes": [],
+  "infoCodes": [],
+  "warningCodes": [
+    "MODEL_PROFILE_MISMATCH",
+  ],
+}
+`;
+
+exports[`Rules Snapshot Tests - Canonical Specs to Expected Issue Codes > MODEL_PROFILE_MISMATCH scenarios > should detect spine model not optimized for uplinks > model-profile-mismatch-spine 1`] = `
+{
+  "errorCodes": [],
+  "infoCodes": [],
+  "warningCodes": [
+    "MODEL_PROFILE_MISMATCH",
+  ],
+}
+`;
+
+exports[`Rules Snapshot Tests - Canonical Specs to Expected Issue Codes > Multiple violations - complex scenarios > should detect multiple rule violations in problematic fabric > multiple-violations-complex 1`] = `
+{
+  "errorCodes": [
+    "LEAF_CAPACITY_EXCEEDED",
+  ],
+  "infoCodes": [],
+  "warningCodes": [
+    "ES_LAG_SINGLE_NIC",
+    "MC_LAG_ODD_LEAFS",
+    "MODEL_PROFILE_MISMATCH",
+    "MODEL_PROFILE_MISMATCH",
+    "UPLINKS_NOT_DIVISIBLE_BY_SPINES",
+  ],
+}
+`;
+
+exports[`Rules Snapshot Tests - Canonical Specs to Expected Issue Codes > Multiple violations - complex scenarios > should return empty results for perfect fabric configuration > perfect-fabric-no-violations 1`] = `
+{
+  "errorCodes": [],
+  "infoCodes": [],
+  "warningCodes": [],
+}
+`;
+
+exports[`Rules Snapshot Tests - Canonical Specs to Expected Issue Codes > SPINE_CAPACITY_EXCEEDED scenarios > should detect spine capacity exceeded - legacy mode > spine-capacity-exceeded-legacy 1`] = `
+{
+  "errorCodes": [
+    "SPINE_CAPACITY_EXCEEDED",
+  ],
+  "infoCodes": [],
+  "warningCodes": [],
+}
+`;
+
+exports[`Rules Snapshot Tests - Canonical Specs to Expected Issue Codes > SPINE_CAPACITY_EXCEEDED scenarios > should detect spine capacity exceeded - overloaded multi-class fabric > spine-capacity-exceeded-multi-class 1`] = `
+{
+  "errorCodes": [
+    "SPINE_CAPACITY_EXCEEDED",
+  ],
+  "infoCodes": [],
+  "warningCodes": [],
+}
+`;
+
+exports[`Rules Snapshot Tests - Canonical Specs to Expected Issue Codes > UPLINKS_NOT_DIVISIBLE_BY_SPINES scenarios > should detect uneven uplink distribution - 3 uplinks 2 spines > uplinks-not-divisible-warning 1`] = `
+{
+  "errorCodes": [],
+  "infoCodes": [],
+  "warningCodes": [
+    "UPLINKS_NOT_DIVISIBLE_BY_SPINES",
+  ],
+}
+`;
+
+exports[`Rules Snapshot Tests - Canonical Specs to Expected Issue Codes > UPLINKS_NOT_DIVISIBLE_BY_SPINES scenarios > should detect uneven uplink distribution - legacy mode 5 uplinks 2 spines > uplinks-not-divisible-legacy 1`] = `
+{
+  "errorCodes": [],
+  "infoCodes": [],
+  "warningCodes": [
+    "UPLINKS_NOT_DIVISIBLE_BY_SPINES",
+  ],
+}
+`;

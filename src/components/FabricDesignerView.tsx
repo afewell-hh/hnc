@@ -5,6 +5,7 @@ import type { FabricDesignContext } from '../app.types'
 import { IssuesPanel } from '../ui/IssuesPanel'
 import { OverrideChip, FieldWithOverride } from '../ui/OverrideChip'
 import { GuardPanel } from '../ui/GuardPanel'
+import { WiringDiagramSection } from '../ui/WiringDiagramSection'
 
 export const FabricDesignerView: React.FC = () => {
   const [state, send] = useMachine(fabricDesignMachine, {})
@@ -319,6 +320,15 @@ export const FabricDesignerView: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* Wiring Diagram Section */}
+        <WiringDiagramSection
+          computedTopology={computedTopology}
+          allocationResult={state.context.allocationResult || null}
+          config={config}
+          isVisible={currentState === 'computed' || currentState === 'saving' || currentState === 'saved'}
+          hasCapacityError={computedTopology ? !computedTopology.isValid : false}
+        />
 
         {currentState === 'saved' && (
           <div 

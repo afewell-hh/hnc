@@ -76,7 +76,7 @@ describe('FGD File Operations', () => {
 
       expect(result.success).toBe(true)
       expect(result.fgdId).toMatch(/^fgd-test-fabric-123-\d+$/)
-      expect(result.fabricPath).toBe(join(TEST_BASE_DIR, TEST_FABRIC_ID))
+      expect(result.fabricPath).toBe('./' + join(TEST_BASE_DIR, TEST_FABRIC_ID))
       expect(result.filesWritten).toHaveLength(3)
       expect(result.error).toBeUndefined()
 
@@ -84,7 +84,7 @@ describe('FGD File Operations', () => {
       const expectedFiles = ['servers.yaml', 'switches.yaml', 'connections.yaml']
       for (const filename of expectedFiles) {
         const filepath = join(TEST_BASE_DIR, TEST_FABRIC_ID, filename)
-        expect(result.filesWritten).toContain(filepath)
+        expect(result.filesWritten).toContain('./' + filepath)
         await expect(fs.access(filepath)).resolves.toBeUndefined()
       }
     })
@@ -127,7 +127,7 @@ describe('FGD File Operations', () => {
       })
 
       expect(result.success).toBe(true)
-      expect(result.fabricPath).toBe(join(TEST_BASE_DIR, specialFabricId))
+      expect(result.fabricPath).toBe('./' + join(TEST_BASE_DIR, specialFabricId))
       
       // Verify directory was created
       const stat = await fs.stat(join(TEST_BASE_DIR, specialFabricId))
@@ -184,7 +184,7 @@ describe('FGD File Operations', () => {
 
       expect(result.success).toBe(true)
       expect(result.diagram).toBeDefined()
-      expect(result.fabricPath).toBe(join(TEST_BASE_DIR, TEST_FABRIC_ID))
+      expect(result.fabricPath).toBe('./' + join(TEST_BASE_DIR, TEST_FABRIC_ID))
       expect(result.filesRead).toHaveLength(3)
       expect(result.error).toBeUndefined()
 

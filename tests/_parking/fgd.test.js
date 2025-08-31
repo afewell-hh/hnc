@@ -1,3 +1,6 @@
+// TODO: This test is quarantined - FGD file system tests (JS version) were moved to parking
+// These tests may be duplicates of the TypeScript version or need v0.4.1 compatibility fixes
+
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { promises as fs } from 'fs';
 import { join } from 'path';

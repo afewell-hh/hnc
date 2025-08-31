@@ -1,3 +1,6 @@
+// TODO: This test is quarantined - Quick integration test (TS version) was moved to parking
+// This may be duplicate or need v0.4.1 compatibility fixes
+
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { promises as fs } from 'fs'
 import { saveFGD, loadFGD } from '../../src/io/fgd'

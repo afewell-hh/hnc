@@ -10,65 +10,414 @@
       - heading "HNC Fabric Designer v0.4" [level=1] [ref=e9]
       - generic [ref=e10]:
         - text: "State:"
-        - strong [ref=e11]: configuring
+        - strong [ref=e11]: computed
         - generic [ref=e12]: 🔍 Rules Engine Active
-    - generic [ref=e13]:
-      - heading "Configuration" [level=2] [ref=e14]
-      - generic [ref=e15]:
-        - generic [ref=e17]:
-          - generic [ref=e18]: "Fabric Name:"
-          - textbox "Fabric Name" [ref=e19]
-        - generic [ref=e21]:
-          - generic [ref=e22]: "Spine Model ID:"
-          - combobox "Spine Model" [ref=e23]:
+    - region "Issues panel with 1 items" [ref=e13]:
+      - generic [ref=e14]:
+        - heading "Issues (1)" [level=3] [ref=e15]:
+          - generic [ref=e16]: 🔍
+          - text: Issues (1)
+        - generic [ref=e18]:
+          - generic [ref=e19]: ❌
+          - text: 1 Errors
+        - paragraph [ref=e20]: Review the issues below. Some can be manually overridden if needed.
+      - list [ref=e21]:
+        - generic [ref=e22]:
+          - heading "errors (1)" [level=4] [ref=e23]:
+            - generic [ref=e24]: ❌
+            - text: errors (1)
+          - listitem [ref=e25]:
+            - button "High Oversubscription Ratio high Optimization Oversubscription ratio is 12.00:1. This may impact performance under high load." [ref=e26] [cursor=pointer]:
+              - generic [ref=e27] [cursor=pointer]:
+                - generic [ref=e28] [cursor=pointer]:
+                  - generic [ref=e29] [cursor=pointer]: 🚫
+                  - strong [ref=e30] [cursor=pointer]: High Oversubscription Ratio
+                  - generic [ref=e31] [cursor=pointer]: high
+                  - generic [ref=e32] [cursor=pointer]: Optimization
+                - paragraph [ref=e33] [cursor=pointer]: Oversubscription ratio is 12.00:1. This may impact performance under high load.
+              - generic [ref=e34] [cursor=pointer]: ▶
+      - paragraph [ref=e36]: ❌ 1 error(s) must be resolved or overridden before saving.
+    - generic [ref=e37]:
+      - heading "Configuration" [level=2] [ref=e38]
+      - generic [ref=e39]:
+        - generic [ref=e41]:
+          - generic [ref=e42]: "Fabric Name:"
+          - textbox "Fabric Name" [ref=e43]: E2E-Test-Fabric
+        - generic [ref=e45]:
+          - generic [ref=e46]: "Spine Model ID:"
+          - combobox "Spine Model" [ref=e47]:
             - option "Select spine model"
             - option "DS3000 (32-port)" [selected]
-        - generic [ref=e25]:
-          - generic [ref=e26]: "Leaf Model ID:"
-          - combobox "Leaf Model" [ref=e27]:
+        - generic [ref=e49]:
+          - generic [ref=e50]: "Leaf Model ID:"
+          - combobox "Leaf Model" [ref=e51]:
             - option "Select leaf model"
             - option "DS2000 (48-port)" [selected]
-        - generic [ref=e29]:
-          - generic [ref=e30]: "Uplinks Per Leaf (even):"
-          - spinbutton "Uplinks Per Leaf" [ref=e31]: "2"
-        - generic [ref=e33]:
-          - generic [ref=e34]: "Endpoint Count:"
-          - spinbutton "Endpoint Count" [ref=e35]: "48"
-        - generic [ref=e37]:
-          - generic [ref=e38]: "Endpoint Profile:"
-          - combobox "Endpoint Profile" [ref=e39]:
+        - generic [ref=e53]:
+          - generic [ref=e54]: "Uplinks Per Leaf (even):"
+          - spinbutton "Uplinks Per Leaf" [ref=e55]: "2"
+        - generic [ref=e57]:
+          - generic [ref=e58]: "Endpoint Count:"
+          - spinbutton "Endpoint Count" [ref=e59]: "24"
+        - generic [ref=e61]:
+          - generic [ref=e62]: "Endpoint Profile:"
+          - combobox "Endpoint Profile" [ref=e63]:
             - option "Select profile"
             - option "Standard Server (2 ports)" [selected]
             - option "High-Density Server (4 ports)"
-      - generic [ref=e40]:
-        - button "Compute Topology" [ref=e41] [cursor=pointer]
-        - button "Reset" [ref=e42] [cursor=pointer]
-    - heading "Preview" [level=2] [ref=e44]
-    - generic [ref=e45]:
-      - heading "Debug Info" [level=3] [ref=e46]
-      - generic [ref=e47]:
-        - generic [ref=e48]:
-          - strong [ref=e49]: "Current State:"
-          - text: configuring
-        - generic [ref=e50]:
-          - strong [ref=e51]: "Config Valid:"
+      - generic [ref=e64]:
+        - button "Compute Topology" [active] [ref=e65] [cursor=pointer]
+        - button "Reset" [ref=e66] [cursor=pointer]
+    - generic [ref=e67]:
+      - heading "Preview" [level=2] [ref=e68]
+      - generic [ref=e69]:
+        - heading "Computed Topology" [level=3] [ref=e70]
+        - generic [ref=e71]:
+          - generic [ref=e72]:
+            - strong [ref=e73]: "Leaves Needed:"
+            - text: "1"
+          - generic [ref=e74]:
+            - strong [ref=e75]: "Spines Needed:"
+            - text: "1"
+          - generic [ref=e76]:
+            - strong [ref=e77]: "Total Ports:"
+            - text: "80"
+          - generic [ref=e78]:
+            - strong [ref=e79]: "Used Ports:"
+            - text: "28"
+          - generic [ref=e80]:
+            - strong [ref=e81]: "O/S Ratio:"
+            - text: 12.00:1
+            - generic [ref=e82]: (Too High!)
+          - generic [ref=e83]:
+            - strong [ref=e84]: "Valid:"
+            - generic [ref=e85]: "Yes"
+        - button "Save to FGD" [ref=e87] [cursor=pointer]
+      - generic [ref=e88]:
+        - heading "Wiring Diagram" [level=3] [ref=e89]
+        - generic [ref=e90]:
+          - button "Download YAML files as zip" [ref=e91] [cursor=pointer]: 📦 Download YAML
+          - button "Open FGD folder" [ref=e92] [cursor=pointer]: 📁 Open FGD Folder
+        - generic [ref=e93]:
+          - generic [ref=e94]:
+            - heading "Switches" [level=4] [ref=e95]
+            - table "Network switches configuration" [ref=e96]:
+              - rowgroup [ref=e97]:
+                - row "Name Model Role Assignable Ranges" [ref=e98]:
+                  - cell "Name" [ref=e99]
+                  - cell "Model" [ref=e100]
+                  - cell "Role" [ref=e101]
+                  - cell "Assignable Ranges" [ref=e102]
+              - rowgroup [ref=e103]:
+                - row "spine-1 DS3000 spine 1-32" [ref=e104]:
+                  - cell "spine-1" [ref=e105]
+                  - cell "DS3000" [ref=e106]
+                  - cell "spine" [ref=e107]
+                  - cell "1-32" [ref=e108]
+                - row "leaf-1 DS2000 leaf 1-48" [ref=e109]:
+                  - cell "leaf-1" [ref=e110]
+                  - cell "DS2000" [ref=e111]
+                  - cell "leaf" [ref=e112]
+                  - cell "1-48" [ref=e113]
+          - generic [ref=e114]:
+            - heading "Servers" [level=4] [ref=e115]
+            - table "Server endpoints configuration" [ref=e116]:
+              - rowgroup [ref=e117]:
+                - row "Name Class NICs Type" [ref=e118]:
+                  - cell "Name" [ref=e119]
+                  - cell "Class" [ref=e120]
+                  - cell "NICs" [ref=e121]
+                  - cell "Type" [ref=e122]
+              - rowgroup [ref=e123]:
+                - row "srv-default-standardserver-1 default 2 server" [ref=e124]:
+                  - cell "srv-default-standardserver-1" [ref=e125]
+                  - cell "default" [ref=e126]
+                  - cell "2" [ref=e127]
+                  - cell "server" [ref=e128]
+                - row "srv-default-standardserver-2 default 2 server" [ref=e129]:
+                  - cell "srv-default-standardserver-2" [ref=e130]
+                  - cell "default" [ref=e131]
+                  - cell "2" [ref=e132]
+                  - cell "server" [ref=e133]
+                - row "srv-default-standardserver-3 default 2 server" [ref=e134]:
+                  - cell "srv-default-standardserver-3" [ref=e135]
+                  - cell "default" [ref=e136]
+                  - cell "2" [ref=e137]
+                  - cell "server" [ref=e138]
+                - row "srv-default-standardserver-4 default 2 server" [ref=e139]:
+                  - cell "srv-default-standardserver-4" [ref=e140]
+                  - cell "default" [ref=e141]
+                  - cell "2" [ref=e142]
+                  - cell "server" [ref=e143]
+                - row "srv-default-standardserver-5 default 2 server" [ref=e144]:
+                  - cell "srv-default-standardserver-5" [ref=e145]
+                  - cell "default" [ref=e146]
+                  - cell "2" [ref=e147]
+                  - cell "server" [ref=e148]
+                - row "srv-default-standardserver-6 default 2 server" [ref=e149]:
+                  - cell "srv-default-standardserver-6" [ref=e150]
+                  - cell "default" [ref=e151]
+                  - cell "2" [ref=e152]
+                  - cell "server" [ref=e153]
+                - row "srv-default-standardserver-7 default 2 server" [ref=e154]:
+                  - cell "srv-default-standardserver-7" [ref=e155]
+                  - cell "default" [ref=e156]
+                  - cell "2" [ref=e157]
+                  - cell "server" [ref=e158]
+                - row "srv-default-standardserver-8 default 2 server" [ref=e159]:
+                  - cell "srv-default-standardserver-8" [ref=e160]
+                  - cell "default" [ref=e161]
+                  - cell "2" [ref=e162]
+                  - cell "server" [ref=e163]
+                - row "srv-default-standardserver-9 default 2 server" [ref=e164]:
+                  - cell "srv-default-standardserver-9" [ref=e165]
+                  - cell "default" [ref=e166]
+                  - cell "2" [ref=e167]
+                  - cell "server" [ref=e168]
+                - row "srv-default-standardserver-10 default 2 server" [ref=e169]:
+                  - cell "srv-default-standardserver-10" [ref=e170]
+                  - cell "default" [ref=e171]
+                  - cell "2" [ref=e172]
+                  - cell "server" [ref=e173]
+                - row "srv-default-standardserver-11 default 2 server" [ref=e174]:
+                  - cell "srv-default-standardserver-11" [ref=e175]
+                  - cell "default" [ref=e176]
+                  - cell "2" [ref=e177]
+                  - cell "server" [ref=e178]
+                - row "srv-default-standardserver-12 default 2 server" [ref=e179]:
+                  - cell "srv-default-standardserver-12" [ref=e180]
+                  - cell "default" [ref=e181]
+                  - cell "2" [ref=e182]
+                  - cell "server" [ref=e183]
+                - row "srv-default-standardserver-13 default 2 server" [ref=e184]:
+                  - cell "srv-default-standardserver-13" [ref=e185]
+                  - cell "default" [ref=e186]
+                  - cell "2" [ref=e187]
+                  - cell "server" [ref=e188]
+                - row "srv-default-standardserver-14 default 2 server" [ref=e189]:
+                  - cell "srv-default-standardserver-14" [ref=e190]
+                  - cell "default" [ref=e191]
+                  - cell "2" [ref=e192]
+                  - cell "server" [ref=e193]
+                - row "srv-default-standardserver-15 default 2 server" [ref=e194]:
+                  - cell "srv-default-standardserver-15" [ref=e195]
+                  - cell "default" [ref=e196]
+                  - cell "2" [ref=e197]
+                  - cell "server" [ref=e198]
+                - row "srv-default-standardserver-16 default 2 server" [ref=e199]:
+                  - cell "srv-default-standardserver-16" [ref=e200]
+                  - cell "default" [ref=e201]
+                  - cell "2" [ref=e202]
+                  - cell "server" [ref=e203]
+                - row "srv-default-standardserver-17 default 2 server" [ref=e204]:
+                  - cell "srv-default-standardserver-17" [ref=e205]
+                  - cell "default" [ref=e206]
+                  - cell "2" [ref=e207]
+                  - cell "server" [ref=e208]
+                - row "srv-default-standardserver-18 default 2 server" [ref=e209]:
+                  - cell "srv-default-standardserver-18" [ref=e210]
+                  - cell "default" [ref=e211]
+                  - cell "2" [ref=e212]
+                  - cell "server" [ref=e213]
+                - row "srv-default-standardserver-19 default 2 server" [ref=e214]:
+                  - cell "srv-default-standardserver-19" [ref=e215]
+                  - cell "default" [ref=e216]
+                  - cell "2" [ref=e217]
+                  - cell "server" [ref=e218]
+                - row "srv-default-standardserver-20 default 2 server" [ref=e219]:
+                  - cell "srv-default-standardserver-20" [ref=e220]
+                  - cell "default" [ref=e221]
+                  - cell "2" [ref=e222]
+                  - cell "server" [ref=e223]
+                - row "srv-default-standardserver-21 default 2 server" [ref=e224]:
+                  - cell "srv-default-standardserver-21" [ref=e225]
+                  - cell "default" [ref=e226]
+                  - cell "2" [ref=e227]
+                  - cell "server" [ref=e228]
+                - row "srv-default-standardserver-22 default 2 server" [ref=e229]:
+                  - cell "srv-default-standardserver-22" [ref=e230]
+                  - cell "default" [ref=e231]
+                  - cell "2" [ref=e232]
+                  - cell "server" [ref=e233]
+                - row "srv-default-standardserver-23 default 2 server" [ref=e234]:
+                  - cell "srv-default-standardserver-23" [ref=e235]
+                  - cell "default" [ref=e236]
+                  - cell "2" [ref=e237]
+                  - cell "server" [ref=e238]
+                - row "srv-default-standardserver-24 default 2 server" [ref=e239]:
+                  - cell "srv-default-standardserver-24" [ref=e240]
+                  - cell "default" [ref=e241]
+                  - cell "2" [ref=e242]
+                  - cell "server" [ref=e243]
+          - generic [ref=e244]:
+            - heading "Connections" [level=4] [ref=e245]
+            - table "Network connections" [ref=e246]:
+              - rowgroup [ref=e247]:
+                - row "Source ⇄ Destination Type" [ref=e248]:
+                  - cell "Source" [ref=e249]
+                  - cell "⇄" [ref=e250]
+                  - cell "Destination" [ref=e251]
+                  - cell "Type" [ref=e252]
+              - rowgroup [ref=e253]:
+                - row "leaf-1:Et1/1 ⇄ spine-1:Et1/1 uplink" [ref=e254]:
+                  - cell "leaf-1:Et1/1" [ref=e255]
+                  - cell "⇄" [ref=e256]
+                  - cell "spine-1:Et1/1" [ref=e257]
+                  - cell "uplink" [ref=e258]
+                - row "leaf-1:Et1/2 ⇄ spine-1:Et1/2 uplink" [ref=e259]:
+                  - cell "leaf-1:Et1/2" [ref=e260]
+                  - cell "⇄" [ref=e261]
+                  - cell "spine-1:Et1/2" [ref=e262]
+                  - cell "uplink" [ref=e263]
+                - row "srv-default-standardserver-1:eth0 ⇄ leaf-1:Et1/1 endpoint" [ref=e264]:
+                  - cell "srv-default-standardserver-1:eth0" [ref=e265]
+                  - cell "⇄" [ref=e266]
+                  - cell "leaf-1:Et1/1" [ref=e267]
+                  - cell "endpoint" [ref=e268]
+                - row "srv-default-standardserver-10:eth0 ⇄ leaf-1:Et1/10 endpoint" [ref=e269]:
+                  - cell "srv-default-standardserver-10:eth0" [ref=e270]
+                  - cell "⇄" [ref=e271]
+                  - cell "leaf-1:Et1/10" [ref=e272]
+                  - cell "endpoint" [ref=e273]
+                - row "srv-default-standardserver-11:eth0 ⇄ leaf-1:Et1/11 endpoint" [ref=e274]:
+                  - cell "srv-default-standardserver-11:eth0" [ref=e275]
+                  - cell "⇄" [ref=e276]
+                  - cell "leaf-1:Et1/11" [ref=e277]
+                  - cell "endpoint" [ref=e278]
+                - row "srv-default-standardserver-12:eth0 ⇄ leaf-1:Et1/12 endpoint" [ref=e279]:
+                  - cell "srv-default-standardserver-12:eth0" [ref=e280]
+                  - cell "⇄" [ref=e281]
+                  - cell "leaf-1:Et1/12" [ref=e282]
+                  - cell "endpoint" [ref=e283]
+                - row "srv-default-standardserver-13:eth0 ⇄ leaf-1:Et1/13 endpoint" [ref=e284]:
+                  - cell "srv-default-standardserver-13:eth0" [ref=e285]
+                  - cell "⇄" [ref=e286]
+                  - cell "leaf-1:Et1/13" [ref=e287]
+                  - cell "endpoint" [ref=e288]
+                - row "srv-default-standardserver-14:eth0 ⇄ leaf-1:Et1/14 endpoint" [ref=e289]:
+                  - cell "srv-default-standardserver-14:eth0" [ref=e290]
+                  - cell "⇄" [ref=e291]
+                  - cell "leaf-1:Et1/14" [ref=e292]
+                  - cell "endpoint" [ref=e293]
+                - row "srv-default-standardserver-15:eth0 ⇄ leaf-1:Et1/15 endpoint" [ref=e294]:
+                  - cell "srv-default-standardserver-15:eth0" [ref=e295]
+                  - cell "⇄" [ref=e296]
+                  - cell "leaf-1:Et1/15" [ref=e297]
+                  - cell "endpoint" [ref=e298]
+                - row "srv-default-standardserver-16:eth0 ⇄ leaf-1:Et1/16 endpoint" [ref=e299]:
+                  - cell "srv-default-standardserver-16:eth0" [ref=e300]
+                  - cell "⇄" [ref=e301]
+                  - cell "leaf-1:Et1/16" [ref=e302]
+                  - cell "endpoint" [ref=e303]
+                - row "srv-default-standardserver-17:eth0 ⇄ leaf-1:Et1/17 endpoint" [ref=e304]:
+                  - cell "srv-default-standardserver-17:eth0" [ref=e305]
+                  - cell "⇄" [ref=e306]
+                  - cell "leaf-1:Et1/17" [ref=e307]
+                  - cell "endpoint" [ref=e308]
+                - row "srv-default-standardserver-18:eth0 ⇄ leaf-1:Et1/18 endpoint" [ref=e309]:
+                  - cell "srv-default-standardserver-18:eth0" [ref=e310]
+                  - cell "⇄" [ref=e311]
+                  - cell "leaf-1:Et1/18" [ref=e312]
+                  - cell "endpoint" [ref=e313]
+                - row "srv-default-standardserver-19:eth0 ⇄ leaf-1:Et1/19 endpoint" [ref=e314]:
+                  - cell "srv-default-standardserver-19:eth0" [ref=e315]
+                  - cell "⇄" [ref=e316]
+                  - cell "leaf-1:Et1/19" [ref=e317]
+                  - cell "endpoint" [ref=e318]
+                - row "srv-default-standardserver-2:eth0 ⇄ leaf-1:Et1/2 endpoint" [ref=e319]:
+                  - cell "srv-default-standardserver-2:eth0" [ref=e320]
+                  - cell "⇄" [ref=e321]
+                  - cell "leaf-1:Et1/2" [ref=e322]
+                  - cell "endpoint" [ref=e323]
+                - row "srv-default-standardserver-20:eth0 ⇄ leaf-1:Et1/20 endpoint" [ref=e324]:
+                  - cell "srv-default-standardserver-20:eth0" [ref=e325]
+                  - cell "⇄" [ref=e326]
+                  - cell "leaf-1:Et1/20" [ref=e327]
+                  - cell "endpoint" [ref=e328]
+                - row "srv-default-standardserver-21:eth0 ⇄ leaf-1:Et1/21 endpoint" [ref=e329]:
+                  - cell "srv-default-standardserver-21:eth0" [ref=e330]
+                  - cell "⇄" [ref=e331]
+                  - cell "leaf-1:Et1/21" [ref=e332]
+                  - cell "endpoint" [ref=e333]
+                - row "srv-default-standardserver-22:eth0 ⇄ leaf-1:Et1/22 endpoint" [ref=e334]:
+                  - cell "srv-default-standardserver-22:eth0" [ref=e335]
+                  - cell "⇄" [ref=e336]
+                  - cell "leaf-1:Et1/22" [ref=e337]
+                  - cell "endpoint" [ref=e338]
+                - row "srv-default-standardserver-23:eth0 ⇄ leaf-1:Et1/23 endpoint" [ref=e339]:
+                  - cell "srv-default-standardserver-23:eth0" [ref=e340]
+                  - cell "⇄" [ref=e341]
+                  - cell "leaf-1:Et1/23" [ref=e342]
+                  - cell "endpoint" [ref=e343]
+                - row "srv-default-standardserver-24:eth0 ⇄ leaf-1:Et1/24 endpoint" [ref=e344]:
+                  - cell "srv-default-standardserver-24:eth0" [ref=e345]
+                  - cell "⇄" [ref=e346]
+                  - cell "leaf-1:Et1/24" [ref=e347]
+                  - cell "endpoint" [ref=e348]
+                - row "srv-default-standardserver-3:eth0 ⇄ leaf-1:Et1/3 endpoint" [ref=e349]:
+                  - cell "srv-default-standardserver-3:eth0" [ref=e350]
+                  - cell "⇄" [ref=e351]
+                  - cell "leaf-1:Et1/3" [ref=e352]
+                  - cell "endpoint" [ref=e353]
+                - row "srv-default-standardserver-4:eth0 ⇄ leaf-1:Et1/4 endpoint" [ref=e354]:
+                  - cell "srv-default-standardserver-4:eth0" [ref=e355]
+                  - cell "⇄" [ref=e356]
+                  - cell "leaf-1:Et1/4" [ref=e357]
+                  - cell "endpoint" [ref=e358]
+                - row "srv-default-standardserver-5:eth0 ⇄ leaf-1:Et1/5 endpoint" [ref=e359]:
+                  - cell "srv-default-standardserver-5:eth0" [ref=e360]
+                  - cell "⇄" [ref=e361]
+                  - cell "leaf-1:Et1/5" [ref=e362]
+                  - cell "endpoint" [ref=e363]
+                - row "srv-default-standardserver-6:eth0 ⇄ leaf-1:Et1/6 endpoint" [ref=e364]:
+                  - cell "srv-default-standardserver-6:eth0" [ref=e365]
+                  - cell "⇄" [ref=e366]
+                  - cell "leaf-1:Et1/6" [ref=e367]
+                  - cell "endpoint" [ref=e368]
+                - row "srv-default-standardserver-7:eth0 ⇄ leaf-1:Et1/7 endpoint" [ref=e369]:
+                  - cell "srv-default-standardserver-7:eth0" [ref=e370]
+                  - cell "⇄" [ref=e371]
+                  - cell "leaf-1:Et1/7" [ref=e372]
+                  - cell "endpoint" [ref=e373]
+                - row "srv-default-standardserver-8:eth0 ⇄ leaf-1:Et1/8 endpoint" [ref=e374]:
+                  - cell "srv-default-standardserver-8:eth0" [ref=e375]
+                  - cell "⇄" [ref=e376]
+                  - cell "leaf-1:Et1/8" [ref=e377]
+                  - cell "endpoint" [ref=e378]
+                - row "srv-default-standardserver-9:eth0 ⇄ leaf-1:Et1/9 endpoint" [ref=e379]:
+                  - cell "srv-default-standardserver-9:eth0" [ref=e380]
+                  - cell "⇄" [ref=e381]
+                  - cell "leaf-1:Et1/9" [ref=e382]
+                  - cell "endpoint" [ref=e383]
+      - generic [ref=e384]:
+        - heading "⚠ Validation Errors" [level=3] [ref=e385]
+        - list [ref=e386]:
+          - listitem [ref=e387]: "Leaf capacity exceeded: need 48 endpoint ports but only 46 available"
+    - generic [ref=e388]:
+      - heading "Debug Info" [level=3] [ref=e389]
+      - generic [ref=e390]:
+        - generic [ref=e391]:
+          - strong [ref=e392]: "Current State:"
+          - text: computed
+        - generic [ref=e393]:
+          - strong [ref=e394]: "Config Valid:"
           - text: "true"
-        - generic [ref=e52]:
-          - strong [ref=e53]: "Has Topology:"
-          - text: "false"
-        - generic [ref=e54]:
-          - strong [ref=e55]: "Saved to FGD:"
-          - text: "false"
-        - generic [ref=e56]:
-          - strong [ref=e57]: "Rules Engine:"
+        - generic [ref=e395]:
+          - strong [ref=e396]: "Has Topology:"
           - text: "true"
-        - generic [ref=e58]:
-          - strong [ref=e59]: "Issues Count:"
+        - generic [ref=e397]:
+          - strong [ref=e398]: "Saved to FGD:"
+          - text: "false"
+        - generic [ref=e399]:
+          - strong [ref=e400]: "Rules Engine:"
+          - text: "true"
+        - generic [ref=e401]:
+          - strong [ref=e402]: "Issues Count:"
+          - text: "1"
+        - generic [ref=e403]:
+          - strong [ref=e404]: "Overrides Count:"
           - text: "0"
-        - generic [ref=e60]:
-          - strong [ref=e61]: "Overrides Count:"
-          - text: "0"
-        - generic [ref=e62]:
-          - strong [ref=e63]: "Can Save:"
+        - generic [ref=e405]:
+          - strong [ref=e406]: "Can Save:"
           - text: "true"
 ```

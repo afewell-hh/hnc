@@ -1,5 +1,9 @@
+// TODO: This test is quarantined - references src/drift/detector.js which doesn't exist
+// The actual file is src/drift/detector.ts - needs significant refactoring for v0.4.1
+// Original drift detection functionality may not be implemented yet
+
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { detectDrift, generateDriftReport } from '../../src/drift/detector.js';
+import { detectDrift, generateDriftReport } from '../../src/drift/detector.ts';
 import * as fgdModule from '../../src/io/fgd.js';
 // Mock the FGD module
 vi.mock('../../src/io/fgd.js');

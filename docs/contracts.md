@@ -126,15 +126,21 @@ type GuardSeverity =
 - **valid-models**: All leaf models exist in switch catalog
 
 #### Allocation Guards  
-- **spine-capacity**: Total uplinks ≤ spine fabricAssignable ports
-- **leaf-capacity**: Endpoint allocation ≤ leaf endpointAssignable ports
+- **SPINE_CAPACITY_EXCEEDED** (error, high severity): Total uplinks exceed spine fabricAssignable ports capacity. Example: When 8 leaves with 6 uplinks each (48 total) connect to single DS3000 spine (32 ports capacity).
+- **LEAF_CAPACITY_EXCEEDED** (error, high severity): Endpoint allocation exceeds leaf endpointAssignable ports capacity. Example: When 50 endpoints requiring 2 ports each (100 total) exceed capacity of 3 DS1000 leaves with 21 available ports each (63 total).
 - **port-distribution**: Even distribution across spines possible
 
 #### LAG Guards
-- **es-lag-compliance**: Equal split LAG requirements
-- **mc-lag-validation**: Multi-chassis LAG constraints
+- **MC_LAG_ODD_LEAFS** (warning, medium severity): MC-LAG enabled with odd number of leaves (requires pairs). Example: When MC-LAG is enabled for a leaf class with 3 leaves, but MC-LAG requires pairs for redundancy.
+- **ES_LAG_SINGLE_NIC** (warning, medium severity): ES-LAG enabled but endpoint has only single NIC. Example: When ES-LAG is enabled for endpoint profiles with nics=1, but ES-LAG requires multiple NICs for redundancy.
 - **lag-port-grouping**: Proper LAG member port allocation
 - **lag-size-constraints**: LAG size matches uplink allocation
+
+#### Network Distribution Guards
+- **UPLINKS_NOT_DIVISIBLE_BY_SPINES** (warning, medium severity): Uplinks per leaf not evenly divisible by spine count. Example: When 3 uplinks per leaf with 2 spines causes uneven load distribution (1.5 uplinks per spine).
+
+#### Model Profile Guards
+- **MODEL_PROFILE_MISMATCH** (warning, medium severity): Switch model not optimized for its intended usage. Example: When DS1000 edge switch is used as spine (not recommended for uplink usage) or DS4000 core switch used as leaf for server connectivity.
 
 #### FKS Guards
 - **drift-detection**: File vs Kubernetes state comparison
