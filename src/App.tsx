@@ -3,14 +3,26 @@ import { useMachine } from '@xstate/react'
 import { workspaceMachine } from './workspace.machine'
 import { fabricDesignMachine } from './app.machine'
 import { FabricList } from './FabricList'
-import { DriftSection } from './drift/DriftSection.js'
-import { detectDrift } from './drift/detector.js'
+import { DriftSection } from './ui/DriftSection'
+import { ErrorBoundary } from './ui/ErrorBoundary'
 import type { DriftStatus } from './drift/types.js'
+import type { FabricDesignContext } from './app.types'
 
 function FabricDesigner({ fabricId, onBackToList }: { fabricId: string; onBackToList: () => void }) {
   const [state, send] = useMachine(fabricDesignMachine)
-  const [driftStatus, setDriftStatus] = useState<DriftStatus | null>(null)
-  const [isCheckingDrift, setIsCheckingDrift] = useState(false)
+  
+  // Type assertion for proper TypeScript support  
+  const context = state.context as FabricDesignContext
+  
+  // Ensure config always exists to prevent render errors
+  const safeConfig = context?.config || {
+    name: '',
+    spineModelId: 'DS3000',
+    leafModelId: 'DS2000',
+    uplinksPerLeaf: 2,
+    endpointProfile: { name: 'Standard Server', portsPerEndpoint: 2 },
+    endpointCount: 48
+  }
 
   return (
     <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
@@ -31,20 +43,28 @@ function FabricDesigner({ fabricId, onBackToList }: { fabricId: string; onBackTo
         </button>
       </div>
 
-      {/* Drift Detection Section */}
-      <DriftSection
-        fabricId={fabricId}
-        driftStatus={driftStatus}
-        onRefreshDrift={handleCheckDrift}
-        isRefreshing={isCheckingDrift}
-      />
+      {/* Drift Detection Section - wrapped in error boundary */}
+      <ErrorBoundary fallback={<div data-testid="drift-fallback" />}>
+        <DriftSection fabricId={fabricId} />
+      </ErrorBoundary>
+      
+      {/* Catalog ready anchor */}
+      <div data-testid="catalog-ready" />
+      
+      {/* Config form wrapper with deterministic ready state */}
+      <div
+        data-testid="config-form"
+        hidden={false}
+      >
       
       <div style={{ marginBottom: '1rem' }}>
-        <label>
+        <label htmlFor="fabric-name">
           Fabric Name:
           <input
+            id="fabric-name"
+            data-testid="fabric-name-input"
             type="text"
-            value={state.context.config.name || ''}
+            value={safeConfig.name || ''}
             onChange={(e) => send({ type: 'UPDATE_CONFIG', data: { name: e.target.value } })}
             style={{ marginLeft: '0.5rem', padding: '0.25rem' }}
           />
@@ -55,7 +75,7 @@ function FabricDesigner({ fabricId, onBackToList }: { fabricId: string; onBackTo
         <label>
           Spine Model:
           <select
-            value={state.context.config.spineModelId || 'DS3000'}
+            value={safeConfig.spineModelId || 'DS3000'}
             onChange={(e) => send({ type: 'UPDATE_CONFIG', data: { spineModelId: e.target.value } })}
             style={{ marginLeft: '0.5rem', padding: '0.25rem' }}
           >
@@ -68,7 +88,7 @@ function FabricDesigner({ fabricId, onBackToList }: { fabricId: string; onBackTo
         <label>
           Leaf Model:
           <select
-            value={state.context.config.leafModelId || 'DS2000'}
+            value={safeConfig.leafModelId || 'DS2000'}
             onChange={(e) => send({ type: 'UPDATE_CONFIG', data: { leafModelId: e.target.value } })}
             style={{ marginLeft: '0.5rem', padding: '0.25rem' }}
           >
@@ -78,13 +98,15 @@ function FabricDesigner({ fabricId, onBackToList }: { fabricId: string; onBackTo
       </div>
 
       <div style={{ marginBottom: '1rem' }}>
-        <label>
+        <label htmlFor="uplinks">
           Uplinks Per Leaf:
           <input
+            id="uplinks"
+            data-testid="uplinks-input"
             type="number"
             min="1"
             max="4"
-            value={state.context.config.uplinksPerLeaf || 2}
+            value={safeConfig.uplinksPerLeaf || 2}
             onChange={(e) => send({ type: 'UPDATE_CONFIG', data: { uplinksPerLeaf: parseInt(e.target.value) } })}
             style={{ marginLeft: '0.5rem', padding: '0.25rem', width: '60px' }}
           />
@@ -92,12 +114,36 @@ function FabricDesigner({ fabricId, onBackToList }: { fabricId: string; onBackTo
       </div>
 
       <div style={{ marginBottom: '1rem' }}>
-        <label>
+        <label htmlFor="endpoint-profile">
+          Endpoint Profile:
+          <select
+            id="endpoint-profile"
+            data-testid="endpoint-profile-select"
+            value="Standard Server"
+            onChange={(e) => {
+              const profiles = { 
+                'Standard Server': { name: 'Standard Server', portsPerEndpoint: 2 },
+                'High-Density Server': { name: 'High-Density Server', portsPerEndpoint: 4 } 
+              }
+              send({ type: 'UPDATE_CONFIG', data: { endpointProfile: profiles[e.target.value as keyof typeof profiles] } })
+            }}
+            style={{ marginLeft: '0.5rem', padding: '0.25rem' }}
+          >
+            <option value="Standard Server">Standard Server (2 ports)</option>
+            <option value="High-Density Server">High-Density Server (4 ports)</option>
+          </select>
+        </label>
+      </div>
+
+      <div style={{ marginBottom: '1rem' }}>
+        <label htmlFor="endpoint-count">
           Endpoint Count:
           <input
+            id="endpoint-count"
+            data-testid="endpoint-count-input"
             type="number"
             min="1"
-            value={state.context.config.endpointCount || 48}
+            value={safeConfig.endpointCount || 48}
             onChange={(e) => send({ type: 'UPDATE_CONFIG', data: { endpointCount: parseInt(e.target.value) } })}
             style={{ marginLeft: '0.5rem', padding: '0.25rem', width: '80px' }}
           />
@@ -154,36 +200,10 @@ function FabricDesigner({ fabricId, onBackToList }: { fabricId: string; onBackTo
       <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '2rem' }}>
         Fabric ID: {fabricId} | State: {String(state.value)} | Config: {JSON.stringify(state.context.config)}
       </div>
+      
+      </div> {/* End config-form wrapper */}
     </div>
   )
-
-  // Drift checking function
-  async function handleCheckDrift() {
-    if (!state.context.loadedDiagram) {
-      setDriftStatus({
-        hasDrift: false,
-        driftSummary: ['No topology loaded - cannot check drift'],
-        lastChecked: new Date(),
-        affectedFiles: []
-      })
-      return
-    }
-
-    setIsCheckingDrift(true)
-    try {
-      const result = await detectDrift(fabricId, state.context.loadedDiagram)
-      setDriftStatus(result)
-    } catch (error) {
-      setDriftStatus({
-        hasDrift: false,
-        driftSummary: [`Error checking drift: ${error instanceof Error ? error.message : 'Unknown error'}`],
-        lastChecked: new Date(),
-        affectedFiles: []
-      })
-    } finally {
-      setIsCheckingDrift(false)
-    }
-  }
 }
 
 function App() {

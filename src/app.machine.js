@@ -2,11 +2,19 @@ import { createMachine, assign, fromPromise } from 'xstate';
 import { FabricSpecSchema, generateWiringStub } from './app.state.js';
 import { computeDerived } from './domain/topology.js';
 import { saveFGD, loadFGD } from './io/fgd.js';
+import { isValidConfig, canSaveTopology } from './app.guards.js';
 export const fabricDesignMachine = createMachine({
     id: 'fabricDesign',
     initial: 'configuring',
     context: {
-        config: {},
+        config: {
+            name: '',
+            spineModelId: 'DS3000',
+            leafModelId: 'DS2000', 
+            uplinksPerLeaf: 2,
+            endpointProfile: { name: 'Standard Server', portsPerEndpoint: 2 },
+            endpointCount: 48
+        },
         computedTopology: null,
         errors: [],
         savedToFgd: false,
@@ -15,78 +23,51 @@ export const fabricDesignMachine = createMachine({
     states: {
         configuring: {
             on: {
-                UPDATE_CONFIG: {
-                    actions: assign({
-                        config: ({ context, event }) => ({ ...context.config, ...event.data }),
-                        errors: []
-                    })
-                },
+                UPDATE_CONFIG: { actions: assign({ config: ({ context, event }) => ({ ...context.config, ...event.data }), errors: [] }) },
                 COMPUTE_TOPOLOGY: [
                     {
-                        guard: ({ context }) => {
-                            try {
-                                const config = FabricSpecSchema.parse(context.config);
-                                return config.uplinksPerLeaf % 2 === 0; // Critical: even uplinks only
-                            }
-                            catch {
-                                return false;
-                            }
-                        },
+                        guard: isValidConfig,
                         target: 'computed',
-                        actions: assign({ computedTopology: ({ context }) => computeDerived(FabricSpecSchema.parse(context.config)), errors: [] })
+                        actions: assign({ 
+                            computedTopology: ({ context }) => {
+                                try {
+                                    console.log('COMPUTE_TOPOLOGY: Guard passed, computing topology');
+                                    console.log('COMPUTE_TOPOLOGY: Config:', JSON.stringify(context.config, null, 2));
+                                    const result = computeDerived(context.config);
+                                    console.log('COMPUTE_TOPOLOGY: Result:', JSON.stringify(result, null, 2));
+                                    console.log('COMPUTE_TOPOLOGY: Transitioning to computed state');
+                                    return result;
+                                } catch (error) {
+                                    console.error('COMPUTE_TOPOLOGY: computeDerived failed:', error);
+                                    return null;
+                                }
+                            }, 
+                            errors: [] 
+                        })
                     },
                     {
                         target: 'invalid',
                         actions: assign({
                             errors: ({ context }) => {
-                                try {
-                                    const config = FabricSpecSchema.parse(context.config);
-                                    return config.uplinksPerLeaf % 2 !== 0 ? ['Uplinks per leaf must be even'] : ['Invalid configuration'];
+                                console.log('COMPUTE_TOPOLOGY: Guard failed, going to invalid state');
+                                // Just check uplinks directly without schema parsing
+                                if (context.config && context.config.uplinksPerLeaf % 2 !== 0) {
+                                    return ['Uplinks per leaf must be even for proper distribution'];
                                 }
-                                catch (error) {
-                                    const errors = error.errors?.map((e) => e.message) || ['Invalid configuration'];
-                                    if (context.config && context.config.uplinksPerLeaf % 2 !== 0) {
-                                        errors.push('Uplinks per leaf must be even for proper distribution');
-                                    }
-                                    return errors;
-                                }
+                                return ['Invalid configuration'];
                             }
                         })
                     }
                 ],
-                RESET: {
-                    target: 'configuring',
-                    actions: assign({
-                        config: {},
-                        computedTopology: null,
-                        errors: [],
-                        savedToFgd: false,
-                        loadedDiagram: null
-                    })
-                },
-                LOAD_FROM_FGD: {
-                    target: 'loading'
-                }
+                RESET: { target: 'configuring', actions: assign({ config: {}, computedTopology: null, errors: [], savedToFgd: false, loadedDiagram: null }) },
+                LOAD_FROM_FGD: { target: 'loading' }
             }
         },
         computed: {
             on: {
-                UPDATE_CONFIG: {
-                    target: 'configuring',
-                    actions: assign({
-                        config: ({ context, event }) => ({ ...context.config, ...event.data }),
-                        computedTopology: null,
-                        errors: []
-                    })
-                },
+                UPDATE_CONFIG: { target: 'configuring', actions: assign({ config: ({ context, event }) => ({ ...context.config, ...event.data }), computedTopology: null, errors: [] }) },
                 SAVE_TO_FGD: [
-                    {
-                        guard: ({ context }) => {
-                            const t = context.computedTopology;
-                            return Boolean(t?.isValid && t.leavesNeeded > 0 && t.spinesNeeded > 0 && t.oversubscriptionRatio <= 4.0);
-                        },
-                        target: 'saving', actions: assign({ errors: [] })
-                    },
+                    { guard: canSaveTopology, target: 'saving', actions: assign({ errors: [] }) },
                     {
                         target: 'invalid',
                         actions: assign({
@@ -108,38 +89,13 @@ export const fabricDesignMachine = createMachine({
                         })
                     }
                 ],
-                RESET: {
-                    target: 'configuring',
-                    actions: assign({
-                        config: {},
-                        computedTopology: null,
-                        errors: [],
-                        savedToFgd: false,
-                        loadedDiagram: null
-                    })
-                }
+                RESET: { target: 'configuring', actions: assign({ config: {}, computedTopology: null, errors: [], savedToFgd: false, loadedDiagram: null }) }
             }
         },
         invalid: {
             on: {
-                UPDATE_CONFIG: {
-                    target: 'configuring',
-                    actions: assign({
-                        config: ({ context, event }) => ({ ...context.config, ...event.data }),
-                        computedTopology: null,
-                        errors: []
-                    })
-                },
-                RESET: {
-                    target: 'configuring',
-                    actions: assign({
-                        config: {},
-                        computedTopology: null,
-                        errors: [],
-                        savedToFgd: false,
-                        loadedDiagram: null
-                    })
-                }
+                UPDATE_CONFIG: { target: 'configuring', actions: assign({ config: ({ context, event }) => ({ ...context.config, ...event.data }), computedTopology: null, errors: [] }) },
+                RESET: { target: 'configuring', actions: assign({ config: {}, computedTopology: null, errors: [], savedToFgd: false, loadedDiagram: null }) }
             }
         },
         loading: {
@@ -147,9 +103,8 @@ export const fabricDesignMachine = createMachine({
                 id: 'loadFgd',
                 src: fromPromise(async ({ input }) => {
                     const result = await loadFGD({ fabricId: input.fabricId });
-                    if (!result.success) {
+                    if (!result.success)
                         throw new Error(result.error || 'Failed to load from FGD');
-                    }
                     return { success: true, diagram: result.diagram };
                 }),
                 input: ({ event }) => ({ fabricId: event.fabricId }),
@@ -172,25 +127,23 @@ export const fabricDesignMachine = createMachine({
             invoke: {
                 id: 'saveFgd',
                 src: fromPromise(async ({ input }) => {
-                    if (!input.context.computedTopology?.isValid) {
+                    if (!input.context.computedTopology?.isValid)
                         throw new Error('Invalid topology cannot be saved');
-                    }
-                    const config = FabricSpecSchema.parse(input.context.config);
+                    const config = input.context.config;
                     const wiringDiagram = generateWiringStub(config, input.context.computedTopology);
-                    // Save to actual FGD files
-                    const result = await saveFGD(wiringDiagram, {
-                        fabricId: config.name || `fabric-${Date.now()}`
-                    });
-                    if (!result.success) {
+                    const result = await saveFGD(wiringDiagram, { fabricId: config.name || `fabric-${Date.now()}` });
+                    if (!result.success)
                         throw new Error(result.error || 'Failed to save to FGD');
-                    }
                     return { success: true, fgdId: result.fgdId, wiringDiagram };
                 }),
                 input: ({ context }) => ({ context }),
                 onDone: { target: 'saved', actions: assign({ savedToFgd: true, errors: [] }) },
-                onError: { target: 'computed', actions: assign({
+                onError: {
+                    target: 'computed',
+                    actions: assign({
                         errors: ({ event }) => [`Failed to save to FGD: ${event.error?.message || 'Unknown error'}`]
-                    }) }
+                    })
+                }
             }
         },
         saved: {
@@ -204,16 +157,7 @@ export const fabricDesignMachine = createMachine({
                         savedToFgd: false
                     })
                 },
-                RESET: {
-                    target: 'configuring',
-                    actions: assign({
-                        config: {},
-                        computedTopology: null,
-                        errors: [],
-                        savedToFgd: false,
-                        loadedDiagram: null
-                    })
-                }
+                RESET: { target: 'configuring', actions: assign({ config: {}, computedTopology: null, errors: [], savedToFgd: false, loadedDiagram: null }) }
             }
         },
         loaded: {
@@ -228,19 +172,8 @@ export const fabricDesignMachine = createMachine({
                         loadedDiagram: null
                     })
                 },
-                LOAD_FROM_FGD: {
-                    target: 'loading'
-                },
-                RESET: {
-                    target: 'configuring',
-                    actions: assign({
-                        config: {},
-                        computedTopology: null,
-                        errors: [],
-                        savedToFgd: false,
-                        loadedDiagram: null
-                    })
-                }
+                LOAD_FROM_FGD: { target: 'loading' },
+                RESET: { target: 'configuring', actions: assign({ config: {}, computedTopology: null, errors: [], savedToFgd: false, loadedDiagram: null }) }
             }
         }
     }

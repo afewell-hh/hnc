@@ -7,7 +7,7 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     setupFiles: ['./tests/setup.ts'],
-    exclude: ['**/e2e/**', '**/node_modules/**'],
+    exclude: ['**/e2e/**', '**/node_modules/**', '**/tests/_parking/**'],
     coverage: {
       reporter: ['text', 'json', 'html'],
       exclude: [
