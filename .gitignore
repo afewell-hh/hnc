@@ -1,6 +1,27 @@
 
 
 
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+build/
+storybook-static/
+
+# Test outputs
+coverage/
+.nyc_output
+
+# Cache directories
+.cache/
+.parcel-cache/
+.next/
+.nuxt/
+.vuepress/dist
+
 # Claude Flow generated files
 .claude/settings.local.json
 .mcp.json
