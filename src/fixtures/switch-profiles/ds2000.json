@@ -1,0 +1,28 @@
+{
+  "modelId": "celestica-ds2000",
+  "roles": [
+    "leaf"
+  ],
+  "ports": {
+    "endpointAssignable": [
+      "E1/1-48"
+    ],
+    "fabricAssignable": [
+      "E1/49-56"
+    ]
+  },
+  "profiles": {
+    "endpoint": {
+      "portProfile": "SFP28-25G",
+      "speedGbps": 25
+    },
+    "uplink": {
+      "portProfile": "QSFP28-100G",
+      "speedGbps": 100
+    }
+  },
+  "meta": {
+    "source": "switch_profile.go",
+    "version": "v0.3.0"
+  }
+}
