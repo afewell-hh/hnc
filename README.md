@@ -369,4 +369,57 @@ Narrate the single most valuable end‑to‑end path.
 # Appendix E — HNC Switch Profile (editable defaults)
 
 * Per model, HNC overlays user‑editable defaults to mark which port ranges are **assignable** to endpoints vs fabric. Overlap is allowed to reflect hardware flexibility; the allocator resolves conflicts.
-* In v0.1 these defaults come from the stub catalog; later we’ll **ingest ONF `switch_profile.go`** and synthesize the HNC profile.
+* In v0.1 these defaults come from the stub catalog; later we'll **ingest ONF `switch_profile.go`** and synthesize the HNC profile.
+
+---
+
+# Version History
+
+## v0.4.1 - Expert Overrides & Enhanced CI
+
+New features in this release:
+
+### Expert Overrides System
+- **Manual Configuration Overrides**: Allow experienced users to override automatic calculations
+- **Safety Guardrails**: Comprehensive rule engine prevents impossible configurations
+- **Field Provenance Tracking**: Track whether values are auto-calculated, manually set, or imported
+- **Issues Panel**: Real-time feedback with errors (blocking), warnings, and informational messages
+- **UI Affordances**: Clear indicators for overridden fields with easy reset options
+
+See [docs/expert-overrides-guide.md](docs/expert-overrides-guide.md) for complete documentation.
+
+### Enhanced CI Pipeline
+- **Optional Integration Tests**: GitHub and K8s integration tests run only when secrets are available
+- **Non-Blocking Design**: Core CI remains fast and hermetic, integration tests are informational
+- **Conditional Execution**: Tests activate automatically when proper credentials exist
+- **Safe Testing**: All integration tests use isolated resources with automatic cleanup
+
+See [docs/integration-testing-guide.md](docs/integration-testing-guide.md) for setup and usage.
+
+### Integration Roadmap
+- **Phase 1** ✅: Basic GitHub and K8s integration (v0.4.1)
+- **Phase 2**: Advanced GitOps workflows and drift detection
+- **Phase 3**: Multi-cluster testing and federation scenarios
+- **Phase 4**: Performance and scalability testing at enterprise scale
+
+See [docs/integrations-roadmap.md](docs/integrations-roadmap.md) for the complete roadmap.
+
+## v0.4.0-alpha - Core Foundation
+
+* Single-screen Config → Preview workflow
+* React + TypeScript + XState state machine
+* Automatic fabric topology calculation
+* Storybook component documentation and testing
+* E2E test coverage with Playwright
+* Switch catalog integration with Celestica DS2000/DS3000 models
+
+# Integration Scripts
+
+HNC includes integration scripts for GitHub and Kubernetes operations:
+
+* `npm run int:gh` - GitHub repository operations, PR management, and CI monitoring  
+* `npm run int:gh:ci` - GitHub integration tests with verbose reporting (CI only)
+* `npm run k8s:validate` - Kubernetes deployment validation and drift detection
+* `npm run int:k8s:ci` - Kubernetes integration tests with test fabric setup (CI only)
+
+These scripts support both local development and CI environments with graceful degradation when tools or credentials are unavailable. See [docs/integration-testing-guide.md](docs/integration-testing-guide.md) for detailed setup and usage instructions.

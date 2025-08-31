@@ -1,6 +1,8 @@
 import { createMachine, assign, fromPromise } from 'xstate'
-import type { FabricDesignContext, FabricDesignEvent, DerivedTopology, AllocationResult, FabricSpec } from './app.types'
+import type { FabricDesignContext, FabricDesignEvent, DerivedTopology, AllocationResult, FabricSpec, Issue, FieldOverride } from './app.types'
 import { computeDerived } from './domain/topology'
+import { evaluate, type RuleEvaluationResult } from './domain/rules'
+import { RulesEngine } from './utils/rules-engine'
 
 // Helper function to compute topology from config
 function computeTopology(config: Partial<FabricSpec>): DerivedTopology {
@@ -183,6 +185,16 @@ function createTestMultiClassConfig(fabricName: string, baseConfig: Partial<Fabr
   return baseConfig
 }
 
+// Helper function to get value by dot-notation path
+function getValueByPath(obj: any, path: string): any {
+  return path.split('.').reduce((current, key) => {
+    if (current && typeof current === 'object') {
+      return current[key]
+    }
+    return undefined
+  }, obj)
+}
+
 export const fabricDesignMachine = createMachine({
   id: 'fabricDesign',
   initial: 'configuring',
@@ -199,7 +211,11 @@ export const fabricDesignMachine = createMachine({
     allocationResult: null,
     errors: [],
     savedToFgd: false,
-    loadedDiagram: null
+    loadedDiagram: null,
+    ruleEvaluationResult: null,
+    issues: [],
+    fieldOverrides: [],
+    rulesEngineEnabled: true
   } as FabricDesignContext,
   types: {} as {
     context: FabricDesignContext
@@ -219,7 +235,14 @@ export const fabricDesignMachine = createMachine({
               // Apply test multi-class configuration if fabric name matches test patterns
               return createTestMultiClassConfig(updatedConfig.name || '', updatedConfig)
             },
-            errors: []
+            errors: [],
+            issues: ({ context, event }) => {
+              if (!context.rulesEngineEnabled) return []
+              
+              const rulesEngine = new RulesEngine()
+              const updatedConfig = { ...context.config, ...event.data }
+              return rulesEngine.analyzeConfiguration(updatedConfig, context.computedTopology, context.fieldOverrides)
+            }
           })
         },
         COMPUTE_TOPOLOGY: [
@@ -261,6 +284,7 @@ export const fabricDesignMachine = createMachine({
             computedTopology: null,
             allocationResult: null,
             errors: [],
+            ruleEvaluationResult: null,
             savedToFgd: false
           })
         }
@@ -275,7 +299,14 @@ export const fabricDesignMachine = createMachine({
           actions: assign({
             computedTopology: ({ event }) => event.output.topology,
             allocationResult: ({ event }) => event.output.allocation,
-            errors: ({ event }) => event.output.errors || []
+            ruleEvaluationResult: ({ event }) => event.output.ruleEvaluationResult,
+            errors: ({ event }) => event.output.errors || [],
+            issues: ({ context, event }) => {
+              if (!context.rulesEngineEnabled) return []
+              
+              const rulesEngine = new RulesEngine()
+              return rulesEngine.analyzeConfiguration(context.config, event.output.topology, context.fieldOverrides)
+            }
           })
         },
         onError: {
@@ -300,12 +331,31 @@ export const fabricDesignMachine = createMachine({
             }),
             computedTopology: null,
             allocationResult: null,
-            errors: []
+            errors: [],
+            ruleEvaluationResult: null
           })
         },
-        SAVE_TO_FGD: {
-          target: 'saving'
-        },
+        SAVE_TO_FGD: [
+          {
+            guard: ({ context }) => {
+              // Gate Save on no errors from rule evaluation
+              const ruleErrors = context.ruleEvaluationResult?.errors || []
+              return ruleErrors.length === 0
+            },
+            target: 'saving'
+          },
+          {
+            // If there are rule errors, stay in computed state and update errors
+            actions: assign({
+              errors: ({ context }) => {
+                const ruleErrors = context.ruleEvaluationResult?.errors || []
+                return ruleErrors.length > 0 
+                  ? [`Cannot save: ${ruleErrors.length} validation error(s) found`]
+                  : ['Cannot save: validation errors detected']
+              }
+            })
+          }
+        ],
         RESET: {
           target: 'configuring',
           actions: assign({
@@ -320,6 +370,7 @@ export const fabricDesignMachine = createMachine({
             computedTopology: null,
             allocationResult: null,
             errors: [],
+            ruleEvaluationResult: null,
             savedToFgd: false
           })
         }
@@ -378,6 +429,7 @@ export const fabricDesignMachine = createMachine({
             computedTopology: null,
             allocationResult: null,
             errors: [],
+            ruleEvaluationResult: null,
             savedToFgd: false
           })
         }
@@ -399,6 +451,7 @@ export const fabricDesignMachine = createMachine({
             computedTopology: null,
             allocationResult: null,
             errors: [],
+            ruleEvaluationResult: null,
             savedToFgd: false
           })
         }
@@ -430,10 +483,66 @@ export const fabricDesignMachine = createMachine({
             computedTopology: null,
             allocationResult: null,
             errors: [],
+            ruleEvaluationResult: null,
             savedToFgd: false
           })
         }
       }
+    }
+  },
+  on: {
+    // Global events for override management
+    OVERRIDE_ISSUE: {
+      actions: assign({
+        fieldOverrides: ({ context, event }) => {
+          const { issueId, reason } = event as { issueId: string; reason: string }
+          const issue = context.issues.find(i => i.id === issueId)
+          if (!issue || !issue.field) return context.fieldOverrides
+          
+          const override: FieldOverride = {
+            fieldPath: issue.field,
+            originalValue: getValueByPath(context.config, issue.field),
+            overriddenValue: getValueByPath(context.config, issue.field),
+            reason,
+            overriddenBy: 'user',
+            overriddenAt: new Date(),
+            relatedIssues: [issueId]
+          }
+          
+          const existingIndex = context.fieldOverrides.findIndex(o => o.fieldPath === issue.field)
+          
+          if (existingIndex >= 0) {
+            const newOverrides = [...context.fieldOverrides]
+            newOverrides[existingIndex] = override
+            return newOverrides
+          } else {
+            return [...context.fieldOverrides, override]
+          }
+        },
+        issues: ({ context, event }) => {
+          if (!context.rulesEngineEnabled) return context.issues
+          
+          const rulesEngine = new RulesEngine()
+          return rulesEngine.analyzeConfiguration(context.config, context.computedTopology, context.fieldOverrides)
+        }
+      })
+    },
+    CLEAR_OVERRIDE: {
+      actions: assign({
+        fieldOverrides: ({ context, event }) => {
+          const { fieldPath } = event as { fieldPath: string }
+          return context.fieldOverrides.filter(o => o.fieldPath !== fieldPath)
+        },
+        issues: ({ context, event }) => {
+          if (!context.rulesEngineEnabled) return context.issues
+          
+          const rulesEngine = new RulesEngine()
+          const { fieldPath } = event as { fieldPath: string }
+          const updatedOverrides = context.fieldOverrides.filter(o => o.fieldPath !== fieldPath)
+          
+          return rulesEngine.analyzeConfiguration(context.config, context.computedTopology, updatedOverrides)
+        }
+      })
     }
   }
 }).provide({
@@ -446,10 +555,20 @@ export const fabricDesignMachine = createMachine({
       const topology = computeDerived(input.config as FabricSpec)
       const allocation = generateAllocationResult(topology)
       
+      // Evaluate fabric rules post-compute
+      const ruleEvaluationResult = evaluate(input.config as FabricSpec, topology)
+      
+      // Combine topology errors with rule evaluation errors
+      const errors = [
+        ...topology.validationErrors,
+        ...ruleEvaluationResult.errors.map(e => e.message)
+      ]
+      
       return {
         topology,
         allocation,
-        errors: topology.validationErrors
+        ruleEvaluationResult,
+        errors
       }
     }),
     saveToFgd: fromPromise(async ({ input }: { input: { config: Partial<FabricSpec>, topology: DerivedTopology | null, allocation: AllocationResult | null } }) => {

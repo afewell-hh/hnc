@@ -309,5 +309,5 @@ connections:
     type: uplink
 metadata:
   fabricName: large-fabric-1000
-  generatedAt: "2025-08-31T10:46:04.038Z"
+  generatedAt: "2025-08-31T15:00:32.061Z"
   totalConnections: 44

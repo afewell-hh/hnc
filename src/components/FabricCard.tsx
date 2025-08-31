@@ -30,6 +30,7 @@ const getStatusLabel = (status: FabricSummary['status']) => {
 export function FabricCard({ fabric, onSelectFabric, onDeleteFabric, onCheckDrift }: FabricCardProps) {
   return (
     <div
+      data-testid="fabric-card"
       style={{
         border: '1px solid #ddd',
         borderRadius: '8px',

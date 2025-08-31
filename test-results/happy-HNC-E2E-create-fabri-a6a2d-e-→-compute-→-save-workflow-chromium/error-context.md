@@ -1,0 +1,74 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - heading "HNC Fabric Designer v0.4" [level=1] [ref=e5]
+    - button "← Back to List" [ref=e6] [cursor=pointer]
+  - generic [ref=e7]:
+    - banner [ref=e8]:
+      - heading "HNC Fabric Designer v0.4" [level=1] [ref=e9]
+      - generic [ref=e10]:
+        - text: "State:"
+        - strong [ref=e11]: configuring
+        - generic [ref=e12]: 🔍 Rules Engine Active
+    - generic [ref=e13]:
+      - heading "Configuration" [level=2] [ref=e14]
+      - generic [ref=e15]:
+        - generic [ref=e17]:
+          - generic [ref=e18]: "Fabric Name:"
+          - textbox "Fabric Name" [ref=e19]
+        - generic [ref=e21]:
+          - generic [ref=e22]: "Spine Model ID:"
+          - combobox "Spine Model" [ref=e23]:
+            - option "Select spine model"
+            - option "DS3000 (32-port)" [selected]
+        - generic [ref=e25]:
+          - generic [ref=e26]: "Leaf Model ID:"
+          - combobox "Leaf Model" [ref=e27]:
+            - option "Select leaf model"
+            - option "DS2000 (48-port)" [selected]
+        - generic [ref=e29]:
+          - generic [ref=e30]: "Uplinks Per Leaf (even):"
+          - spinbutton "Uplinks Per Leaf" [ref=e31]: "2"
+        - generic [ref=e33]:
+          - generic [ref=e34]: "Endpoint Count:"
+          - spinbutton "Endpoint Count" [ref=e35]: "48"
+        - generic [ref=e37]:
+          - generic [ref=e38]: "Endpoint Profile:"
+          - combobox "Endpoint Profile" [ref=e39]:
+            - option "Select profile"
+            - option "Standard Server (2 ports)" [selected]
+            - option "High-Density Server (4 ports)"
+      - generic [ref=e40]:
+        - button "Compute Topology" [ref=e41] [cursor=pointer]
+        - button "Reset" [ref=e42] [cursor=pointer]
+    - heading "Preview" [level=2] [ref=e44]
+    - generic [ref=e45]:
+      - heading "Debug Info" [level=3] [ref=e46]
+      - generic [ref=e47]:
+        - generic [ref=e48]:
+          - strong [ref=e49]: "Current State:"
+          - text: configuring
+        - generic [ref=e50]:
+          - strong [ref=e51]: "Config Valid:"
+          - text: "true"
+        - generic [ref=e52]:
+          - strong [ref=e53]: "Has Topology:"
+          - text: "false"
+        - generic [ref=e54]:
+          - strong [ref=e55]: "Saved to FGD:"
+          - text: "false"
+        - generic [ref=e56]:
+          - strong [ref=e57]: "Rules Engine:"
+          - text: "true"
+        - generic [ref=e58]:
+          - strong [ref=e59]: "Issues Count:"
+          - text: "0"
+        - generic [ref=e60]:
+          - strong [ref=e61]: "Overrides Count:"
+          - text: "0"
+        - generic [ref=e62]:
+          - strong [ref=e63]: "Can Save:"
+          - text: "true"
+```

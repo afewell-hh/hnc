@@ -92,7 +92,7 @@ export const FabricDesignSelected: Story = {
     await userEvent.click(selectButton)
     
     // Should now be in fabric designer mode
-    await expect(canvas.getByText('HNC Fabric Designer v0.2')).toBeInTheDocument()
+    await expect(canvas.getByText('HNC Fabric Designer v0.4')).toBeInTheDocument()
     await expect(canvas.getByText('← Back to List')).toBeInTheDocument()
     // The fabric name input should be empty initially in designer mode
     const fabricNameInput = canvas.getByDisplayValue('')
@@ -165,7 +165,7 @@ export const NavigationFlow: Story = {
     await userEvent.click(selectButton)
     
     // Should be in designer
-    await expect(canvas.getByText('HNC Fabric Designer v0.2')).toBeInTheDocument()
+    await expect(canvas.getByText('HNC Fabric Designer v0.4')).toBeInTheDocument()
     
     // Navigate back to list
     const backButton = canvas.getByText('← Back to List')
@@ -203,7 +203,7 @@ export const DriftDetectionWorkflow: Story = {
     await userEvent.click(selectButton)
     
     // Should show drift section in designer
-    await expect(canvas.getByText('HNC Fabric Designer v0.2')).toBeInTheDocument()
+    await expect(canvas.getByText('HNC Fabric Designer v0.4')).toBeInTheDocument()
     await expect(canvas.getByText('Drift Status')).toBeInTheDocument()
     await expect(canvas.getByRole('button', { name: 'Check for Drift' })).toBeInTheDocument()
   },

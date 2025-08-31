@@ -1,17 +1,116 @@
 name: ci
 on: [push, pull_request]
+
+env:
+  NODE_VERSION: '20'
+
 jobs:
-  build-test:
+  # Core CI pipeline - always runs (hermetic)
+  core-tests:
+    name: Core Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '20', cache: 'npm' }
-      - run: npm ci
-      - run: npx tsc --noEmit
-      - run: npm run build
-      - run: npm test -- --run
-      - run: npx playwright install --with-deps
-      - run: npm run e2e
-      - run: npm run build-storybook
-      - run: npm run test-storybook
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: TypeScript type checking
+        run: npx tsc --noEmit
+        
+      - name: Build application
+        run: npm run build
+        
+      - name: Run unit tests
+        run: npm test -- --run
+        
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+        
+      - name: Run E2E golden path test
+        run: npm run e2e
+        
+      - name: Build Storybook
+        run: npm run build-storybook
+        
+      - name: Test Storybook stories
+        run: npm run test-storybook
+
+  # Optional GitHub integration tests (only when secrets exist)
+  integration-github:
+    name: GitHub Integration
+    runs-on: ubuntu-latest
+    needs: core-tests
+    if: ${{ secrets.GITHUB_TOKEN && vars.GIT_REMOTE }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run GitHub integration tests
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GIT_REMOTE: ${{ vars.GIT_REMOTE }}
+          FEATURE_GIT: 'true'
+        run: npm run int:gh
+        
+  # Optional K8s integration tests (only when kubeconfig exists)
+  integration-k8s:
+    name: K8s Integration
+    runs-on: ubuntu-latest
+    needs: core-tests
+    if: ${{ secrets.KUBECONFIG || github.event.inputs.enable_k8s_validation == 'true' }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.28.0'
+          
+      - name: Configure kubectl (if kubeconfig provided)
+        if: ${{ secrets.KUBECONFIG }}
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBECONFIG }}" > ~/.kube/config
+          kubectl cluster-info
+          
+      - name: Setup local k8s cluster (if no kubeconfig)
+        if: ${{ !secrets.KUBECONFIG }}
+        uses: helm/kind-action@v1
+        with:
+          version: v0.20.0
+          kubectl_version: v1.28.0
+          cluster_name: hnc-test
+          
+      - name: Run K8s integration tests
+        env:
+          FEATURE_K8S: 'true'
+        run: npm run k8s:validate

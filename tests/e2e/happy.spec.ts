@@ -28,24 +28,24 @@ test('HNC E2E: create fabric → configure → compute → save workflow', async
   
   // STEP 4: Should navigate to FabricDesigner view
   // Wait for designer header to appear
-  await expect(page.getByText('HNC Fabric Designer v0.2')).toBeVisible({ timeout: 5000 })
+  await expect(page.getByTestId('fabric-designer-view').getByRole('heading', { name: 'HNC Fabric Designer v0.4' })).toBeVisible({ timeout: 5000 })
   
   // Verify we're in the fabric designer with form visible - check for key form elements
-  await expect(page.getByText('Fabric Name:')).toBeVisible()
+  await expect(page.getByText('Configuration')).toBeVisible()
   await expect(page.getByRole('button', { name: /Compute Topology/i })).toBeVisible()
   
   // STEP 5: Configure the fabric
   // Fill fabric name (should be auto-populated but let's be explicit)
-  await page.getByRole('textbox', { name: /Fabric Name/i }).clear()
-  await page.getByRole('textbox', { name: /Fabric Name/i }).fill('E2E-Test-Fabric')
+  await page.getByTestId('fabric-name-input').clear()
+  await page.getByTestId('fabric-name-input').fill('E2E-Test-Fabric')
   
   // Configure uplinks per leaf (use even number as required by validation)
-  await page.getByRole('spinbutton', { name: /Uplinks Per Leaf/i }).fill('2')
+  await page.getByTestId('uplinks-per-leaf-input').fill('2')
   
   // Configure endpoint profile (skip validation, may not be rendered yet)
   
   // Configure endpoint count (use smaller number to avoid oversubscription)
-  await page.getByRole('spinbutton', { name: /Endpoint Count/i }).fill('24')
+  await page.getByTestId('endpoint-count-input').fill('24')
   
   // STEP 6: Compute topology
   await page.getByRole('button', { name: /Compute Topology/i }).click()

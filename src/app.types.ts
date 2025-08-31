@@ -1,5 +1,32 @@
 // Core type definitions for HNC fabric design
 
+// Field provenance tracking
+export type FieldProvenance = 'auto' | 'user' | 'import' | 'manual_override'
+
+// Issue types for the issues panel
+export interface Issue {
+  id: string
+  type: 'error' | 'warning' | 'info'
+  severity: 'high' | 'medium' | 'low'
+  title: string
+  message: string
+  field?: string // field that caused the issue
+  overridable?: boolean // can this issue be manually overridden
+  overridden?: boolean // has this issue been manually overridden
+  category: 'validation' | 'constraint' | 'optimization' | 'configuration'
+}
+
+// Override state tracking for fields
+export interface FieldOverride {
+  fieldPath: string
+  originalValue: any
+  overriddenValue: any
+  reason: string
+  overriddenBy: 'user' | 'system'
+  overriddenAt: Date
+  relatedIssues: string[] // issue IDs that this override addresses
+}
+
 // Switch catalog types (stub)
 export interface SwitchModel {
   id: string
@@ -91,6 +118,11 @@ export interface FabricDesignContext {
   errors: string[]
   savedToFgd: boolean
   loadedDiagram: WiringDiagram | null
+  // Rule evaluation results
+  ruleEvaluationResult?: import('./domain/rules').RuleEvaluationResult | null
+  issues: Issue[]
+  fieldOverrides: FieldOverride[]
+  rulesEngineEnabled: boolean
 }
 
 // Import allocation types
@@ -130,6 +162,8 @@ export type FabricDesignEvent =
   | { type: 'SAVE_TO_FGD' }
   | { type: 'LOAD_FROM_FGD'; fabricId: string }
   | { type: 'RESET' }
+  | { type: 'OVERRIDE_ISSUE'; issueId: string; reason: string }
+  | { type: 'CLEAR_OVERRIDE'; fieldPath: string }
 
 // LAG constraint types for future WPs
 export interface LAGConstraints {
@@ -160,6 +194,11 @@ export interface LeafClass {
   count?: number // number of leaves in this class
   mcLag?: boolean // MC-LAG constraint flag
   metadata?: Record<string, any>
+  // Field provenance tracking per leaf class
+  provenance?: {
+    spines?: FieldProvenance
+    leaves?: FieldProvenance
+  }
 }
 
 // Per-class allocation results

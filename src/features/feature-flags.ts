@@ -5,6 +5,7 @@
 
 export interface FeatureFlags {
   git: boolean;
+  k8s: boolean;
   // Future features can be added here
   // analytics?: boolean;
   // cloudSync?: boolean;
@@ -55,13 +56,15 @@ function getFeatureFlag(key: string, defaultValue: boolean = false): boolean {
  * Default: All features disabled for safety
  */
 export const featureFlags: FeatureFlags = {
-  git: getFeatureFlag('git', false) // Default: Git integration disabled
+  git: getFeatureFlag('git', false), // Default: Git integration disabled
+  k8s: getFeatureFlag('k8s', false) // Default: K8s integration disabled
 }
 
 /**
  * Helper functions for specific features
  */
 export const isGitEnabled = (): boolean => featureFlags.git
+export const isK8sEnabled = (): boolean => featureFlags.k8s
 
 /**
  * Development helper to override feature flags programmatically
@@ -87,7 +90,8 @@ export function overrideFeatureFlag(key: keyof FeatureFlags, value: boolean): vo
  */
 export function getFeatureFlagStatus(): Record<string, boolean> {
   return {
-    git: featureFlags.git
+    git: featureFlags.git,
+    k8s: featureFlags.k8s
   }
 }
 
@@ -98,8 +102,10 @@ export function resetFeatureFlags(): void {
   if (typeof window !== 'undefined' && window.localStorage) {
     try {
       window.localStorage.removeItem('FEATURE_GIT')
+      window.localStorage.removeItem('FEATURE_K8S')
       // Reload flags from environment/defaults
       ;(featureFlags as any).git = getFeatureFlag('git', false)
+      ;(featureFlags as any).k8s = getFeatureFlag('k8s', false)
     } catch (e) {
       // Ignore localStorage errors
     }
