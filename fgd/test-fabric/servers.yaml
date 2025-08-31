@@ -1,0 +1,7 @@
+metadata:
+  generatedAt: "2025-08-31T05:12:07.210Z"
+  totalServers: 1
+servers:
+  - connections: 2
+    id: server-1
+    type: web-server
