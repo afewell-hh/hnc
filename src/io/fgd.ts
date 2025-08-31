@@ -193,6 +193,8 @@ export interface FGDSaveOptions {
   fabricId: string
   baseDir?: string // Default: './fgd'
   createDirs?: boolean // Default: true
+  metadata?: any // For storing additional fabric metadata
+  version?: string // Version tracking
 }
 
 export interface FGDLoadOptions {

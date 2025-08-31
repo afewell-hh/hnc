@@ -1,0 +1,304 @@
+metadata:
+  generatedAt: "2025-08-31T10:46:04.013Z"
+  totalServers: 100
+servers:
+  - connections: 2
+    id: server-1
+    type: Multi-Class Server
+  - connections: 2
+    id: server-10
+    type: Multi-Class Server
+  - connections: 2
+    id: server-100
+    type: Multi-Class Server
+  - connections: 2
+    id: server-11
+    type: Multi-Class Server
+  - connections: 2
+    id: server-12
+    type: Multi-Class Server
+  - connections: 2
+    id: server-13
+    type: Multi-Class Server
+  - connections: 2
+    id: server-14
+    type: Multi-Class Server
+  - connections: 2
+    id: server-15
+    type: Multi-Class Server
+  - connections: 2
+    id: server-16
+    type: Multi-Class Server
+  - connections: 2
+    id: server-17
+    type: Multi-Class Server
+  - connections: 2
+    id: server-18
+    type: Multi-Class Server
+  - connections: 2
+    id: server-19
+    type: Multi-Class Server
+  - connections: 2
+    id: server-2
+    type: Multi-Class Server
+  - connections: 2
+    id: server-20
+    type: Multi-Class Server
+  - connections: 2
+    id: server-21
+    type: Multi-Class Server
+  - connections: 2
+    id: server-22
+    type: Multi-Class Server
+  - connections: 2
+    id: server-23
+    type: Multi-Class Server
+  - connections: 2
+    id: server-24
+    type: Multi-Class Server
+  - connections: 2
+    id: server-25
+    type: Multi-Class Server
+  - connections: 2
+    id: server-26
+    type: Multi-Class Server
+  - connections: 2
+    id: server-27
+    type: Multi-Class Server
+  - connections: 2
+    id: server-28
+    type: Multi-Class Server
+  - connections: 2
+    id: server-29
+    type: Multi-Class Server
+  - connections: 2
+    id: server-3
+    type: Multi-Class Server
+  - connections: 2
+    id: server-30
+    type: Multi-Class Server
+  - connections: 2
+    id: server-31
+    type: Multi-Class Server
+  - connections: 2
+    id: server-32
+    type: Multi-Class Server
+  - connections: 2
+    id: server-33
+    type: Multi-Class Server
+  - connections: 2
+    id: server-34
+    type: Multi-Class Server
+  - connections: 2
+    id: server-35
+    type: Multi-Class Server
+  - connections: 2
+    id: server-36
+    type: Multi-Class Server
+  - connections: 2
+    id: server-37
+    type: Multi-Class Server
+  - connections: 2
+    id: server-38
+    type: Multi-Class Server
+  - connections: 2
+    id: server-39
+    type: Multi-Class Server
+  - connections: 2
+    id: server-4
+    type: Multi-Class Server
+  - connections: 2
+    id: server-40
+    type: Multi-Class Server
+  - connections: 2
+    id: server-41
+    type: Multi-Class Server
+  - connections: 2
+    id: server-42
+    type: Multi-Class Server
+  - connections: 2
+    id: server-43
+    type: Multi-Class Server
+  - connections: 2
+    id: server-44
+    type: Multi-Class Server
+  - connections: 2
+    id: server-45
+    type: Multi-Class Server
+  - connections: 2
+    id: server-46
+    type: Multi-Class Server
+  - connections: 2
+    id: server-47
+    type: Multi-Class Server
+  - connections: 2
+    id: server-48
+    type: Multi-Class Server
+  - connections: 2
+    id: server-49
+    type: Multi-Class Server
+  - connections: 2
+    id: server-5
+    type: Multi-Class Server
+  - connections: 2
+    id: server-50
+    type: Multi-Class Server
+  - connections: 2
+    id: server-51
+    type: Multi-Class Server
+  - connections: 2
+    id: server-52
+    type: Multi-Class Server
+  - connections: 2
+    id: server-53
+    type: Multi-Class Server
+  - connections: 2
+    id: server-54
+    type: Multi-Class Server
+  - connections: 2
+    id: server-55
+    type: Multi-Class Server
+  - connections: 2
+    id: server-56
+    type: Multi-Class Server
+  - connections: 2
+    id: server-57
+    type: Multi-Class Server
+  - connections: 2
+    id: server-58
+    type: Multi-Class Server
+  - connections: 2
+    id: server-59
+    type: Multi-Class Server
+  - connections: 2
+    id: server-6
+    type: Multi-Class Server
+  - connections: 2
+    id: server-60
+    type: Multi-Class Server
+  - connections: 2
+    id: server-61
+    type: Multi-Class Server
+  - connections: 2
+    id: server-62
+    type: Multi-Class Server
+  - connections: 2
+    id: server-63
+    type: Multi-Class Server
+  - connections: 2
+    id: server-64
+    type: Multi-Class Server
+  - connections: 2
+    id: server-65
+    type: Multi-Class Server
+  - connections: 2
+    id: server-66
+    type: Multi-Class Server
+  - connections: 2
+    id: server-67
+    type: Multi-Class Server
+  - connections: 2
+    id: server-68
+    type: Multi-Class Server
+  - connections: 2
+    id: server-69
+    type: Multi-Class Server
+  - connections: 2
+    id: server-7
+    type: Multi-Class Server
+  - connections: 2
+    id: server-70
+    type: Multi-Class Server
+  - connections: 2
+    id: server-71
+    type: Multi-Class Server
+  - connections: 2
+    id: server-72
+    type: Multi-Class Server
+  - connections: 2
+    id: server-73
+    type: Multi-Class Server
+  - connections: 2
+    id: server-74
+    type: Multi-Class Server
+  - connections: 2
+    id: server-75
+    type: Multi-Class Server
+  - connections: 2
+    id: server-76
+    type: Multi-Class Server
+  - connections: 2
+    id: server-77
+    type: Multi-Class Server
+  - connections: 2
+    id: server-78
+    type: Multi-Class Server
+  - connections: 2
+    id: server-79
+    type: Multi-Class Server
+  - connections: 2
+    id: server-8
+    type: Multi-Class Server
+  - connections: 2
+    id: server-80
+    type: Multi-Class Server
+  - connections: 2
+    id: server-81
+    type: Multi-Class Server
+  - connections: 2
+    id: server-82
+    type: Multi-Class Server
+  - connections: 2
+    id: server-83
+    type: Multi-Class Server
+  - connections: 2
+    id: server-84
+    type: Multi-Class Server
+  - connections: 2
+    id: server-85
+    type: Multi-Class Server
+  - connections: 2
+    id: server-86
+    type: Multi-Class Server
+  - connections: 2
+    id: server-87
+    type: Multi-Class Server
+  - connections: 2
+    id: server-88
+    type: Multi-Class Server
+  - connections: 2
+    id: server-89
+    type: Multi-Class Server
+  - connections: 2
+    id: server-9
+    type: Multi-Class Server
+  - connections: 2
+    id: server-90
+    type: Multi-Class Server
+  - connections: 2
+    id: server-91
+    type: Multi-Class Server
+  - connections: 2
+    id: server-92
+    type: Multi-Class Server
+  - connections: 2
+    id: server-93
+    type: Multi-Class Server
+  - connections: 2
+    id: server-94
+    type: Multi-Class Server
+  - connections: 2
+    id: server-95
+    type: Multi-Class Server
+  - connections: 2
+    id: server-96
+    type: Multi-Class Server
+  - connections: 2
+    id: server-97
+    type: Multi-Class Server
+  - connections: 2
+    id: server-98
+    type: Multi-Class Server
+  - connections: 2
+    id: server-99
+    type: Multi-Class Server

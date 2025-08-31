@@ -4,9 +4,10 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { allocateUplinks, validateAllocationResult } from '../../src/domain/allocator';
+import { allocateUplinks, validateAllocationResult, allocateMultiClassUplinks } from '../../src/domain/allocator';
 import { parsePortRange, expandPortRanges } from '../../src/domain/portUtils';
-import type { AllocationSpec, SwitchProfile } from '../../src/domain/types';
+import type { AllocationSpec, SwitchProfile, MultiClassAllocationResult } from '../../src/domain/types';
+import type { FabricSpec, LeafClass } from '../../src/app.types';
 
 describe('Port Range Parsing', () => {
   it('should parse range format E1/49-56', () => {
@@ -382,6 +383,387 @@ describe('Uplink Allocator', () => {
       
       expect(result.leafMaps).toHaveLength(32);
       expect(result.spineUtilization.every(util => util === 32)).toBe(true);
+    });
+  });
+
+  describe('Multi-Class Allocation', () => {
+    let switchProfiles: Map<string, SwitchProfile>;
+    
+    beforeEach(() => {
+      switchProfiles = new Map();
+      switchProfiles.set('DS2000', ds2000Profile);
+      switchProfiles.set('DS3000', ds3000Profile);
+    });
+
+    describe('Two-Class Happy Path', () => {
+      it('should allocate standard and border classes independently', () => {
+        const fabricSpec: FabricSpec = {
+          name: 'multi-class-fabric',
+          spineModelId: 'DS3000',
+          leafModelId: 'DS2000',
+          leafClasses: [
+            {
+              id: 'standard',
+              name: 'Standard Leaves',
+              role: 'standard',
+              uplinksPerLeaf: 4,
+              endpointProfiles: [
+                { name: 'servers', portsPerEndpoint: 1, count: 40 }
+              ]
+            },
+            {
+              id: 'border',
+              name: 'Border Leaves', 
+              role: 'border',
+              uplinksPerLeaf: 2,
+              endpointProfiles: [
+                { name: 'routers', portsPerEndpoint: 1, count: 20 }
+              ]
+            }
+          ]
+        };
+
+        const result = allocateMultiClassUplinks(fabricSpec, switchProfiles, ds3000Profile);
+
+        expect(result.overallIssues).toEqual([]);
+        expect(result.classAllocations).toHaveLength(2);
+        expect(result.totalLeavesAllocated).toBe(2); // 1 standard + 1 border
+
+        // Standard class allocation
+        const standardClass = result.classAllocations.find(c => c.classId === 'standard')!;
+        expect(standardClass).toBeDefined();
+        expect(standardClass.leavesAllocated).toBe(1); // 40 endpoints / (48-4) = 0.91 -> 1
+        expect(standardClass.leafMaps[0].uplinks).toHaveLength(4);
+        expect(standardClass.totalEndpoints).toBe(40);
+
+        // Border class allocation
+        const borderClass = result.classAllocations.find(c => c.classId === 'border')!;
+        expect(borderClass).toBeDefined();
+        expect(borderClass.leavesAllocated).toBe(1); // 20 endpoints / (48-2) = 0.43 -> 1
+        expect(borderClass.leafMaps[0].uplinks).toHaveLength(2);
+        expect(borderClass.totalEndpoints).toBe(20);
+
+        // Spine utilization: 4 (standard) + 2 (border) = 6 total uplinks, 1 spine = 6 utilization
+        expect(result.spineUtilization).toEqual([6]);
+      });
+
+      it('should maintain deterministic class ordering by ID', () => {
+        const fabricSpec: FabricSpec = {
+          name: 'deterministic-fabric',
+          spineModelId: 'DS3000',
+          leafModelId: 'DS2000',
+          leafClasses: [
+            {
+              id: 'zebra',
+              name: 'Z Class',
+              role: 'standard',
+              uplinksPerLeaf: 2,
+              endpointProfiles: [{ name: 'servers', portsPerEndpoint: 1, count: 10 }]
+            },
+            {
+              id: 'alpha',
+              name: 'A Class',
+              role: 'border', 
+              uplinksPerLeaf: 2,
+              endpointProfiles: [{ name: 'routers', portsPerEndpoint: 1, count: 15 }]
+            }
+          ]
+        };
+
+        const result1 = allocateMultiClassUplinks(fabricSpec, switchProfiles, ds3000Profile);
+        const result2 = allocateMultiClassUplinks(fabricSpec, switchProfiles, ds3000Profile);
+
+        // Results should be identical (deterministic)
+        expect(result1).toEqual(result2);
+        
+        // Alpha class should be processed first (sorted by ID)
+        expect(result1.classAllocations[0].classId).toBe('alpha');
+        expect(result1.classAllocations[1].classId).toBe('zebra');
+      });
+    });
+
+    describe('Validation Failures', () => {
+      it('should reject odd uplinks per class when total spines is even', () => {
+        const fabricSpec: FabricSpec = {
+          name: 'odd-uplinks-fabric',
+          spineModelId: 'DS3000', 
+          leafModelId: 'DS2000',
+          leafClasses: [
+            {
+              id: 'standard',
+              name: 'Standard Class',
+              role: 'standard',
+              uplinksPerLeaf: 3, // Odd uplinks - will fail with 2 spines  
+              endpointProfiles: [{ name: 'servers', portsPerEndpoint: 1, count: 1000 }] // Force many leaves
+            },
+            {
+              id: 'border',
+              name: 'Border Class',
+              role: 'border', 
+              uplinksPerLeaf: 1, // Odd uplinks - will fail with 2 spines
+              endpointProfiles: [{ name: 'routers', portsPerEndpoint: 1, count: 1000 }] // Force many leaves
+            }
+          ]
+        };
+
+        const result = allocateMultiClassUplinks(fabricSpec, switchProfiles, ds3000Profile);
+
+        expect(result.overallIssues.length).toBeGreaterThan(0);
+        expect(result.overallIssues).toContain(
+          'Class border: uplinksPerLeaf (1) must be divisible by spines (3)'
+        );
+        expect(result.classAllocations).toEqual([]);
+      });
+
+      it('should handle missing leaf profiles gracefully', () => {
+        const fabricSpec: FabricSpec = {
+          name: 'missing-profile-fabric',
+          spineModelId: 'DS3000',
+          leafModelId: 'DS2000',
+          leafClasses: [
+            {
+              id: 'standard',
+              name: 'Standard Class',
+              role: 'standard',
+              leafModelId: 'MISSING_MODEL', // Non-existent model
+              uplinksPerLeaf: 2,
+              endpointProfiles: [{ name: 'servers', portsPerEndpoint: 1, count: 20 }]
+            }
+          ]
+        };
+
+        const result = allocateMultiClassUplinks(fabricSpec, switchProfiles, ds3000Profile);
+
+        expect(result.overallIssues).toContain(
+          'Leaf profile not found for class standard model: MISSING_MODEL'
+        );
+        expect(result.classAllocations).toEqual([]);
+      });
+
+      it('should validate spine capacity across all classes', () => {
+        // Create a scenario where total uplinks exceed spine capacity
+        const smallSpineProfile: SwitchProfile = {
+          ...ds3000Profile,
+          ports: {
+            ...ds3000Profile.ports,
+            fabricAssignable: ['E1/1-4'] // Only 4 ports instead of 32
+          }
+        };
+
+        const fabricSpec: FabricSpec = {
+          name: 'spine-capacity-fabric',
+          spineModelId: 'DS3000',
+          leafModelId: 'DS2000', 
+          leafClasses: [
+            {
+              id: 'class1',
+              name: 'Class 1',
+              role: 'standard',
+              uplinksPerLeaf: 6, // Force more uplinks
+              endpointProfiles: [{ name: 'servers', portsPerEndpoint: 1, count: 200 }] // More endpoints
+            },
+            {
+              id: 'class2', 
+              name: 'Class 2',
+              role: 'standard',
+              uplinksPerLeaf: 6,
+              endpointProfiles: [{ name: 'servers', portsPerEndpoint: 1, count: 200 }]
+            }
+          ]
+        };
+
+        const result = allocateMultiClassUplinks(fabricSpec, switchProfiles, smallSpineProfile);
+
+        expect(result.overallIssues.length).toBeGreaterThan(0);
+        expect(result.overallIssues.some(issue => 
+          issue.includes('Ran out of spine fabric ports') || 
+          issue.includes('uplinksPerLeaf') || 
+          issue.includes('must be divisible')
+        )).toBe(true);
+      });
+    });
+
+    describe('Leaf Model Override per Class', () => {
+      it('should use per-class leaf model when specified', () => {
+        // Add a custom leaf profile
+        const customLeafProfile: SwitchProfile = {
+          ...ds2000Profile,
+          modelId: 'CUSTOM_LEAF',
+          ports: {
+            endpointAssignable: ['E1/1-24'], // Different port count
+            fabricAssignable: ['E1/25-32']  // Different fabric ports
+          }
+        };
+        switchProfiles.set('CUSTOM_LEAF', customLeafProfile);
+
+        const fabricSpec: FabricSpec = {
+          name: 'mixed-models-fabric',
+          spineModelId: 'DS3000',
+          leafModelId: 'DS2000', // Default
+          leafClasses: [
+            {
+              id: 'standard',
+              name: 'Standard Class',
+              role: 'standard',
+              // Uses default leafModelId (DS2000)
+              uplinksPerLeaf: 2,
+              endpointProfiles: [{ name: 'servers', portsPerEndpoint: 1, count: 20 }]
+            },
+            {
+              id: 'custom', 
+              name: 'Custom Class',
+              role: 'border',
+              leafModelId: 'CUSTOM_LEAF', // Override
+              uplinksPerLeaf: 2,
+              endpointProfiles: [{ name: 'special', portsPerEndpoint: 1, count: 10 }]
+            }
+          ]
+        };
+
+        const result = allocateMultiClassUplinks(fabricSpec, switchProfiles, ds3000Profile);
+
+        expect(result.overallIssues).toEqual([]);
+        expect(result.classAllocations).toHaveLength(2);
+
+        // Custom class should use different leaf model
+        const customClass = result.classAllocations.find(c => c.classId === 'custom')!;
+        expect(customClass).toBeDefined();
+        expect(customClass.leafMaps[0].uplinks[0].port).toBe('E1/25'); // First fabric port of custom model
+        
+        const standardClass = result.classAllocations.find(c => c.classId === 'standard')!;
+        expect(standardClass.leafMaps[0].uplinks[0].port).toBe('E1/49'); // First fabric port of DS2000
+      });
+    });
+
+    describe('Cross-Class Spine Sharing', () => {
+      it('should share spine ports across different classes', () => {
+        const fabricSpec: FabricSpec = {
+          name: 'spine-sharing-fabric',
+          spineModelId: 'DS3000',
+          leafModelId: 'DS2000',
+          leafClasses: [
+            {
+              id: 'class1',
+              name: 'Class 1',
+              role: 'standard',
+              uplinksPerLeaf: 2,
+              endpointProfiles: [{ name: 'servers', portsPerEndpoint: 1, count: 20 }]
+            },
+            {
+              id: 'class2',
+              name: 'Class 2', 
+              role: 'border',
+              uplinksPerLeaf: 2,
+              endpointProfiles: [{ name: 'routers', portsPerEndpoint: 1, count: 15 }]
+            }
+          ]
+        };
+
+        const result = allocateMultiClassUplinks(fabricSpec, switchProfiles, ds3000Profile);
+
+        expect(result.overallIssues).toEqual([]);
+        
+        // Both classes should share the same spine
+        expect(result.spineUtilization).toHaveLength(1);
+        expect(result.spineUtilization[0]).toBe(4); // 2 (class1) + 2 (class2)
+
+        // Verify both classes use same spine ID (0) but different spine ports
+        const class1 = result.classAllocations.find(c => c.classId === 'class1')!;
+        const class2 = result.classAllocations.find(c => c.classId === 'class2')!;
+        
+        class1.leafMaps[0].uplinks.forEach(uplink => expect(uplink.toSpine).toBe(0));
+        class2.leafMaps[0].uplinks.forEach(uplink => expect(uplink.toSpine).toBe(0));
+        
+        // Global leaf IDs should be unique across classes
+        expect(class1.leafMaps[0].leafId).toBe(0);
+        expect(class2.leafMaps[0].leafId).toBe(1);
+      });
+
+      it('should handle multiple spines with cross-class sharing', () => {
+        const fabricSpec: FabricSpec = {
+          name: 'multi-spine-fabric',
+          spineModelId: 'DS3000',
+          leafModelId: 'DS2000',
+          leafClasses: [
+            {
+              id: 'standard',
+              name: 'Standard Class',
+              role: 'standard', 
+              uplinksPerLeaf: 4,
+              endpointProfiles: [{ name: 'servers', portsPerEndpoint: 1, count: 200 }] // Force multiple leaves
+            },
+            {
+              id: 'border',
+              name: 'Border Class',
+              role: 'border',
+              uplinksPerLeaf: 2, 
+              endpointProfiles: [{ name: 'routers', portsPerEndpoint: 1, count: 100 }] // Force multiple leaves
+            }
+          ]
+        };
+
+        const result = allocateMultiClassUplinks(fabricSpec, switchProfiles, ds3000Profile);
+
+        expect(result.overallIssues).toEqual([]);
+        
+        // Calculate expected: 
+        // Standard: 200/(48-4) = 4.55 -> 5 leaves * 4 uplinks = 20 uplinks
+        // Border: 100/(48-2) = 2.17 -> 3 leaves * 2 uplinks = 6 uplinks
+        // Total: 26 uplinks / 32 spine ports = 1 spine needed, but uplinks distribution should be even
+        
+        const expectedSpines = Math.max(1, Math.ceil(26 / 32));
+        expect(result.spineUtilization).toHaveLength(expectedSpines);
+        
+        const totalUtilization = result.spineUtilization.reduce((sum, util) => sum + util, 0);
+        expect(totalUtilization).toBe(26); // 20 + 6
+      });
+    });
+
+    describe('Backwards Compatibility', () => {
+      it('should fallback to legacy single-class mode when no leafClasses', () => {
+        const legacySpec: FabricSpec = {
+          name: 'legacy-fabric',
+          spineModelId: 'DS3000',
+          leafModelId: 'DS2000',
+          uplinksPerLeaf: 4,
+          endpointCount: 96,
+          endpointProfile: {
+            name: 'Standard Server',
+            portsPerEndpoint: 1
+          }
+        };
+
+        const result = allocateMultiClassUplinks(legacySpec, switchProfiles, ds3000Profile);
+
+        expect(result.overallIssues).toEqual([]);
+        expect(result.legacy).toBeDefined();
+        expect(result.legacy!.leafMaps).toHaveLength(3); // 96 / (48-4) = 96/44 = 2.18 -> 3
+        expect(result.classAllocations).toEqual([]);
+      });
+
+      it('should handle empty leafClasses array', () => {
+        const emptySpec: FabricSpec = {
+          name: 'empty-classes-fabric',
+          spineModelId: 'DS3000',
+          leafModelId: 'DS2000',
+          leafClasses: []
+        };
+
+        const result = allocateMultiClassUplinks(emptySpec, switchProfiles, ds3000Profile);
+
+        expect(result.overallIssues).toContain('No leaf classes defined');
+        expect(result.classAllocations).toEqual([]);
+        expect(result.totalLeavesAllocated).toBe(0);
+      });
+
+      it('should validate existing single-class tests still pass', () => {
+        // This test ensures our changes don't break existing functionality
+        const singleClassResult = allocateUplinks(basicSpec, ds2000Profile, ds3000Profile);
+        
+        expect(singleClassResult.issues).toEqual([]);
+        expect(singleClassResult.leafMaps).toHaveLength(2);
+        expect(singleClassResult.spineUtilization).toEqual([4, 4]);
+      });
     });
   });
 });

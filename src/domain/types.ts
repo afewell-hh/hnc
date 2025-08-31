@@ -26,5 +26,29 @@ export interface AllocationResult {
   issues: string[];  // validation errors
 }
 
+// Multi-class allocation types
+export interface ClassAllocationSpec extends AllocationSpec {
+  classId: string;
+  leafModelId?: string;  // Override default leaf model if specified
+}
+
+export interface LeafClassAllocationResult {
+  classId: string;
+  leafMaps: LeafAllocation[];
+  totalEndpoints: number;
+  leavesAllocated: number;
+  issues: string[];
+}
+
+export interface MultiClassAllocationResult {
+  classAllocations: LeafClassAllocationResult[];
+  spineUtilization: number[];
+  totalLeavesAllocated: number;
+  overallIssues: string[];
+  
+  // Backwards compatibility
+  legacy?: AllocationResult;
+}
+
 // Re-export SwitchProfile from ingest types for convenience
 export { SwitchProfile, ProfilePorts, PortProfile } from '../ingest/types';

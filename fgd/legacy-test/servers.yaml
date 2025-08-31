@@ -1,0 +1,148 @@
+metadata:
+  generatedAt: "2025-08-31T10:46:03.989Z"
+  totalServers: 48
+servers:
+  - connections: 2
+    id: server-1
+    type: Legacy Server
+  - connections: 2
+    id: server-10
+    type: Legacy Server
+  - connections: 2
+    id: server-11
+    type: Legacy Server
+  - connections: 2
+    id: server-12
+    type: Legacy Server
+  - connections: 2
+    id: server-13
+    type: Legacy Server
+  - connections: 2
+    id: server-14
+    type: Legacy Server
+  - connections: 2
+    id: server-15
+    type: Legacy Server
+  - connections: 2
+    id: server-16
+    type: Legacy Server
+  - connections: 2
+    id: server-17
+    type: Legacy Server
+  - connections: 2
+    id: server-18
+    type: Legacy Server
+  - connections: 2
+    id: server-19
+    type: Legacy Server
+  - connections: 2
+    id: server-2
+    type: Legacy Server
+  - connections: 2
+    id: server-20
+    type: Legacy Server
+  - connections: 2
+    id: server-21
+    type: Legacy Server
+  - connections: 2
+    id: server-22
+    type: Legacy Server
+  - connections: 2
+    id: server-23
+    type: Legacy Server
+  - connections: 2
+    id: server-24
+    type: Legacy Server
+  - connections: 2
+    id: server-25
+    type: Legacy Server
+  - connections: 2
+    id: server-26
+    type: Legacy Server
+  - connections: 2
+    id: server-27
+    type: Legacy Server
+  - connections: 2
+    id: server-28
+    type: Legacy Server
+  - connections: 2
+    id: server-29
+    type: Legacy Server
+  - connections: 2
+    id: server-3
+    type: Legacy Server
+  - connections: 2
+    id: server-30
+    type: Legacy Server
+  - connections: 2
+    id: server-31
+    type: Legacy Server
+  - connections: 2
+    id: server-32
+    type: Legacy Server
+  - connections: 2
+    id: server-33
+    type: Legacy Server
+  - connections: 2
+    id: server-34
+    type: Legacy Server
+  - connections: 2
+    id: server-35
+    type: Legacy Server
+  - connections: 2
+    id: server-36
+    type: Legacy Server
+  - connections: 2
+    id: server-37
+    type: Legacy Server
+  - connections: 2
+    id: server-38
+    type: Legacy Server
+  - connections: 2
+    id: server-39
+    type: Legacy Server
+  - connections: 2
+    id: server-4
+    type: Legacy Server
+  - connections: 2
+    id: server-40
+    type: Legacy Server
+  - connections: 2
+    id: server-41
+    type: Legacy Server
+  - connections: 2
+    id: server-42
+    type: Legacy Server
+  - connections: 2
+    id: server-43
+    type: Legacy Server
+  - connections: 2
+    id: server-44
+    type: Legacy Server
+  - connections: 2
+    id: server-45
+    type: Legacy Server
+  - connections: 2
+    id: server-46
+    type: Legacy Server
+  - connections: 2
+    id: server-47
+    type: Legacy Server
+  - connections: 2
+    id: server-48
+    type: Legacy Server
+  - connections: 2
+    id: server-5
+    type: Legacy Server
+  - connections: 2
+    id: server-6
+    type: Legacy Server
+  - connections: 2
+    id: server-7
+    type: Legacy Server
+  - connections: 2
+    id: server-8
+    type: Legacy Server
+  - connections: 2
+    id: server-9
+    type: Legacy Server

@@ -1,0 +1,19 @@
+connections:
+  - from:
+      device: leaf-1
+      port: uplink-1
+    to:
+      device: spine-1
+      port: downlink-1
+    type: uplink
+  - from:
+      device: leaf-1
+      port: uplink-2
+    to:
+      device: spine-1
+      port: downlink-2
+    type: uplink
+metadata:
+  fabricName: lag-fabric
+  generatedAt: "2025-08-31T10:46:04.027Z"
+  totalConnections: 2

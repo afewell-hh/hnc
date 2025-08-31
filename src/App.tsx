@@ -7,6 +7,7 @@ import { DriftSection } from './ui/DriftSection'
 import { ErrorBoundary } from './ui/ErrorBoundary'
 import { PortAllocationTable } from './ui/PortAllocationTable'
 import { AllocationErrors } from './ui/AllocationErrors'
+import { GuardPanel } from './ui/GuardPanel'
 import type { DriftStatus } from './drift/types.js'
 import type { FabricDesignContext } from './app.types'
 
@@ -17,6 +18,7 @@ function FabricDesigner({ fabricId, onBackToList }: { fabricId: string; onBackTo
   const context = state.context as FabricDesignContext
   
   // Ensure config always exists to prevent render errors
+  // Support both single-class (legacy) and multi-class (leafClasses) modes
   const safeConfig = context?.config || {
     name: '',
     spineModelId: 'DS3000',
@@ -25,6 +27,15 @@ function FabricDesigner({ fabricId, onBackToList }: { fabricId: string; onBackTo
     endpointProfile: { name: 'Standard Server', portsPerEndpoint: 2 },
     endpointCount: 48
   }
+
+  // Determine if we're in multi-class mode
+  const isMultiClassMode = safeConfig.leafClasses && safeConfig.leafClasses.length > 0
+  
+  // For backward compatibility, compute total endpoint count from either mode
+  const totalEndpointCount = isMultiClassMode 
+    ? safeConfig.leafClasses.reduce((sum, lc) => 
+        sum + lc.endpointProfiles.reduce((eSum, ep) => eSum + (ep.count || 0), 0), 0)
+    : (safeConfig.endpointCount || 0)
 
   return (
     <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
@@ -56,7 +67,6 @@ function FabricDesigner({ fabricId, onBackToList }: { fabricId: string; onBackTo
       {/* Config form wrapper with deterministic ready state */}
       <div
         data-testid="config-form"
-        hidden={false}
       >
       
       <div style={{ marginBottom: '1rem' }}>
@@ -183,12 +193,21 @@ function FabricDesigner({ fabricId, onBackToList }: { fabricId: string; onBackTo
         </div>
       )}
 
+      {/* Display fabric guards/constraints */}
+      {state.context.computedTopology?.guards && state.context.computedTopology.guards.length > 0 && (
+        <GuardPanel guards={state.context.computedTopology.guards} />
+      )}
+
       {state.context.computedTopology && (
         <div style={{ border: '1px solid #ccc', padding: '1rem', marginBottom: '1rem' }}>
           <h3>Computed Topology</h3>
           <p>Leaves needed: {state.context.computedTopology.leavesNeeded}</p>
           <p>Spines needed: {state.context.computedTopology.spinesNeeded}</p>
           <p>Oversubscription ratio: {state.context.computedTopology.oversubscriptionRatio}:1</p>
+          <p>Total endpoints: {totalEndpointCount}</p>
+          {isMultiClassMode && (
+            <p>Mode: Multi-class ({safeConfig.leafClasses?.length || 0} classes)</p>
+          )}
           <p>Valid: {state.context.computedTopology.isValid ? 'Yes' : 'No'}</p>
         </div>
       )}
@@ -199,12 +218,31 @@ function FabricDesigner({ fabricId, onBackToList }: { fabricId: string; onBackTo
       )}
 
       {/* Show port allocation table if allocation succeeded */}
-      {state.context.computedTopology && state.context.allocationResult && 
-       state.context.allocationResult.issues.length === 0 && state.context.allocationResult.leafMaps.length > 0 && (
-        <PortAllocationTable 
-          allocationResult={state.context.allocationResult}
-          spinesNeeded={state.context.computedTopology.spinesNeeded}
-        />
+      {state.context.computedTopology && (
+        <>
+          {/* Multi-class mode with extended allocation result */}
+          {isMultiClassMode && state.context.extendedAllocationResult && 
+           state.context.extendedAllocationResult.issues.length === 0 && 
+           state.context.extendedAllocationResult.leafClassAllocations.length > 0 && (
+            <PortAllocationTable 
+              extendedAllocationResult={state.context.extendedAllocationResult}
+              spinesNeeded={state.context.computedTopology.spinesNeeded}
+              leafClasses={safeConfig.leafClasses}
+              isMultiClassMode={isMultiClassMode}
+            />
+          )}
+          
+          {/* Legacy single-class mode */}
+          {!isMultiClassMode && state.context.allocationResult && 
+           state.context.allocationResult.issues.length === 0 && 
+           state.context.allocationResult.leafMaps.length > 0 && (
+            <PortAllocationTable 
+              allocationResult={state.context.allocationResult}
+              spinesNeeded={state.context.computedTopology.spinesNeeded}
+              isMultiClassMode={false}
+            />
+          )}
+        </>
       )}
 
       {state.matches('saved') && (
@@ -214,7 +252,14 @@ function FabricDesigner({ fabricId, onBackToList }: { fabricId: string; onBackTo
       )}
 
       <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '2rem' }}>
-        Fabric ID: {fabricId} | State: {String(state.value)} | Config: {JSON.stringify(state.context.config)}
+        Fabric ID: {fabricId} | State: {String(state.value)} | Mode: {isMultiClassMode ? 'Multi-class' : 'Legacy'} | 
+        Endpoints: {totalEndpointCount}
+        <details style={{ marginTop: '0.5rem' }}>
+          <summary>Debug Config</summary>
+          <pre style={{ fontSize: '0.7rem', maxHeight: '200px', overflow: 'auto' }}>
+            {JSON.stringify(state.context.config, null, 2)}
+          </pre>
+        </details>
       </div>
       
       </div> {/* End config-form wrapper */}

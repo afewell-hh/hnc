@@ -51,3 +51,42 @@ export interface DriftDetectionOptions {
   ignoreTimestamps?: boolean
   detailedComparison?: boolean
 }
+
+// FKS (Fabric Services) specific drift detection types
+export interface FksDriftItem {
+  id: string
+  path: string
+  type: 'switch' | 'server' | 'connection' | 'configuration'
+  severity: 'low' | 'medium' | 'high'
+  description: string
+  fgdValue?: any
+  k8sValue?: any
+  timestamp: string
+}
+
+export interface FksDriftResult {
+  enabled: boolean
+  hasDrift: boolean
+  items: FksDriftItem[]
+  lastChecked: Date
+  k8sApiStatus: 'healthy' | 'degraded' | 'unavailable'
+  comparisonTimeMs: number
+}
+
+export interface FksDriftDetectionOptions {
+  fabricId?: string
+  includeHealthyResources?: boolean
+  severityThreshold?: 'low' | 'medium' | 'high'
+  k8sApiTimeout?: number
+}
+
+// Union type for backward compatibility
+export interface DriftResult {
+  enabled: boolean
+  items: Array<{ id: string; path: string }> | FksDriftItem[]
+  // FKS-specific fields (optional for backward compatibility)
+  hasDrift?: boolean
+  lastChecked?: Date
+  k8sApiStatus?: 'healthy' | 'degraded' | 'unavailable'
+  comparisonTimeMs?: number
+}

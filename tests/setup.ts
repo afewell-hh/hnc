@@ -1,5 +1,18 @@
 import { vi } from 'vitest'
 
+// Mock localStorage for tests
+Object.defineProperty(global, 'localStorage', {
+  value: {
+    getItem: vi.fn(),
+    setItem: vi.fn(),
+    removeItem: vi.fn(),
+    clear: vi.fn(),
+    length: 0,
+    key: vi.fn(),
+  },
+  writable: true
+})
+
 // Mock console methods to reduce noise in tests
 const originalConsole = global.console;
 global.console = {

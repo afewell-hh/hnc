@@ -57,5 +57,5 @@ connections:
     type: uplink
 metadata:
   fabricName: golden-path-fabric
-  generatedAt: "2025-08-31T03:26:42.894Z"
+  generatedAt: "2025-08-31T08:15:22.898Z"
   totalConnections: 8

@@ -13,7 +13,37 @@ export interface SwitchModel {
 export interface EndpointProfile {
   name: string
   portsPerEndpoint: number
+  type?: 'server' | 'storage' | 'compute' | 'network'
+  count?: number
+  bandwidth?: number
+  redundancy?: boolean
+  esLag?: boolean // ES-LAG intent flag
+  nics?: number   // NIC count per endpoint (defaults to 1)
 }
+
+// Guard types for validation constraints
+export interface ESLAGGuard {
+  guardType: 'ES_LAG_INVALID'
+  message: string
+  details: {
+    leafClassId: string
+    profileName: string
+    requiredNics: number
+    actualNics: number
+  }
+}
+
+export interface MCLAGGuard {
+  guardType: 'MC_LAG_ODD_LEAF_COUNT'
+  message: string
+  details: {
+    classId: string
+    leafCount: number
+    mcLagEnabled: boolean
+  }
+}
+
+export type FabricGuard = ESLAGGuard | MCLAGGuard
 
 // Derived topology computation results
 export interface DerivedTopology {
@@ -24,6 +54,7 @@ export interface DerivedTopology {
   oversubscriptionRatio: number
   isValid: boolean
   validationErrors: string[]
+  guards: FabricGuard[] // Constraint validation violations
 }
 
 // Wiring diagram stub structure
@@ -52,6 +83,7 @@ export interface FabricDesignContext {
   config: Partial<FabricSpec>
   computedTopology: DerivedTopology | null
   allocationResult?: AllocationResult | null
+  extendedAllocationResult?: ExtendedAllocationResult | null
   switchProfiles?: {
     leaf: SwitchProfile;
     spine: SwitchProfile;
@@ -99,12 +131,72 @@ export type FabricDesignEvent =
   | { type: 'LOAD_FROM_FGD'; fabricId: string }
   | { type: 'RESET' }
 
+// LAG constraint types for future WPs
+export interface LAGConstraints {
+  esLag?: {
+    enabled: boolean
+    minMembers?: number
+    maxMembers?: number
+    loadBalancing?: 'round-robin' | 'hash-based'
+  }
+  mcLag?: {
+    enabled: boolean
+    peerLinkCount?: number
+    keepAliveInterval?: number
+    systemPriority?: number
+  }
+}
+
+
+// LeafClass interface for multi-class fabric support
+export interface LeafClass {
+  id: string
+  name: string
+  role: 'standard' | 'border'
+  leafModelId?: string // defaults to global leaf model if not specified
+  uplinksPerLeaf: number
+  endpointProfiles: EndpointProfile[]
+  lag?: LAGConstraints
+  count?: number // number of leaves in this class
+  mcLag?: boolean // MC-LAG constraint flag
+  metadata?: Record<string, any>
+}
+
+// Per-class allocation results
+export interface LeafClassAllocation {
+  classId: string
+  leafMaps: LeafAllocation[]
+  totalEndpoints: number
+  utilizationPercent: number
+  issues: string[]
+}
+
+// Extended allocation result with per-class support
+export interface ExtendedAllocationResult {
+  leafClassAllocations: LeafClassAllocation[]
+  spineUtilization: number[]
+  totalLeavesAllocated: number
+  overallUtilization: number
+  issues: string[]
+  legacy?: AllocationResult // for backwards compatibility
+}
+
 // Fabric specification type (derived from Zod schema)
 export interface FabricSpec {
   name: string
   spineModelId: string
-  leafModelId: string
-  uplinksPerLeaf: number
-  endpointProfile: EndpointProfile
-  endpointCount: number
+  leafModelId: string // global default for leaf classes without specific model
+  
+  // Multi-class support (new)
+  leafClasses?: LeafClass[]
+  
+  // Backwards compatibility (legacy single-class mode)
+  uplinksPerLeaf?: number
+  endpointProfile?: EndpointProfile
+  endpointCount?: number
+  
+  // Common fields
+  metadata?: Record<string, any>
+  version?: string
+  createdAt?: Date
 }

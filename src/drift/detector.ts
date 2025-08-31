@@ -351,3 +351,422 @@ function estimateDiagramSize(diagram: WiringDiagram): number {
   // Rough estimate of object size for performance tracking
   return JSON.stringify(diagram).length
 }
+
+// ===== FKS DRIFT DETECTION (HNC v0.4) =====
+
+import type { FksDriftItem, FksDriftResult, FksDriftDetectionOptions } from './types.js';
+import type { FabricServicesApiResponse, SwitchStatus, ServerStatus, ConnectionStatus } from './mock-fks-api.js';
+
+/**
+ * FKS drift detection class - compares FGD YAML with K8s Fabric Services API
+ */
+export class FksDriftDetector {
+  private fabricId: string;
+  private options: FksDriftDetectionOptions;
+
+  constructor(fabricId: string = 'default-fabric', options: FksDriftDetectionOptions = {}) {
+    this.fabricId = fabricId;
+    this.options = {
+      includeHealthyResources: false,
+      severityThreshold: 'medium',
+      k8sApiTimeout: 5000,
+      ...options
+    };
+  }
+
+  /**
+   * Main drift detection method - compares FGD with K8s API response
+   */
+  async detectDrift(k8sApiResponse: FabricServicesApiResponse, fgdDiagram?: WiringDiagram): Promise<FksDriftResult> {
+    const startTime = performance.now();
+    const lastChecked = new Date();
+
+    let diagram = fgdDiagram;
+    if (!diagram) {
+      // Load FGD diagram from storage if not provided
+      try {
+        const loadResult = await loadFGD({ fabricId: this.fabricId });
+        if (!loadResult.success || !loadResult.diagram) {
+          return {
+            enabled: true,
+            hasDrift: false,
+            items: [{
+              id: 'fgd-load-error',
+              path: `fgd/${this.fabricId}`,
+              type: 'configuration',
+              severity: 'high',
+              description: 'Failed to load FGD diagram for comparison',
+              timestamp: lastChecked.toISOString()
+            }],
+            lastChecked,
+            k8sApiStatus: 'healthy',
+            comparisonTimeMs: performance.now() - startTime
+          };
+        }
+        diagram = loadResult.diagram;
+      } catch (error) {
+        return {
+          enabled: true,
+          hasDrift: false,
+          items: [{
+            id: 'fgd-load-exception',
+            path: `fgd/${this.fabricId}`,
+            type: 'configuration',
+            severity: 'high',
+            description: `Exception loading FGD: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            timestamp: lastChecked.toISOString()
+          }],
+          lastChecked,
+          k8sApiStatus: 'healthy',
+          comparisonTimeMs: performance.now() - startTime
+        };
+      }
+    }
+
+    // Perform drift comparison
+    const driftItems: FksDriftItem[] = [];
+
+    // Compare switches (combine spines and leaves)
+    const allSwitches = [...diagram.devices.spines, ...diagram.devices.leaves];
+    const switchDriftItems = this.compareSwitches(allSwitches, k8sApiResponse.items.switches);
+    driftItems.push(...switchDriftItems);
+
+    // Compare servers/endpoints
+    const serverDriftItems = this.compareServers(diagram.devices.servers, k8sApiResponse.items.servers);
+    driftItems.push(...serverDriftItems);
+
+    // Compare connections
+    const connectionDriftItems = this.compareConnections(diagram.connections, k8sApiResponse.items.connections);
+    driftItems.push(...connectionDriftItems);
+
+    // Determine K8s API health status
+    const k8sApiStatus = this.assessK8sApiHealth(k8sApiResponse);
+
+    // Filter by severity threshold
+    const filteredItems = this.filterBySeverity(driftItems);
+
+    const comparisonTimeMs = performance.now() - startTime;
+
+    return {
+      enabled: true,
+      hasDrift: filteredItems.length > 0,
+      items: filteredItems,
+      lastChecked,
+      k8sApiStatus,
+      comparisonTimeMs
+    };
+  }
+
+  /**
+   * Compare FGD switches with K8s switch status
+   */
+  private compareSwitches(fgdSwitches: Array<{ id: string; model: string; ports: number }>, k8sSwitches: SwitchStatus[]): FksDriftItem[] {
+    const driftItems: FksDriftItem[] = [];
+    const timestamp = new Date().toISOString();
+
+    // Create maps for efficient lookup - normalize names for comparison
+    const fgdSwitchMap = new Map(fgdSwitches.map(sw => [sw.id.toLowerCase(), sw]));
+    const k8sSwitchMap = new Map(k8sSwitches.map(sw => [sw.metadata.name.toLowerCase(), sw]));
+
+    // Check for missing switches in K8s
+    for (const fgdSwitch of fgdSwitches) {
+      if (!k8sSwitchMap.has(fgdSwitch.id.toLowerCase())) {
+        driftItems.push({
+          id: `missing-switch-${fgdSwitch.id.toLowerCase()}`,
+          path: `switches/${fgdSwitch.id}`,
+          type: 'switch',
+          severity: 'high',
+          description: `Switch ${fgdSwitch.id} missing from K8s cluster`,
+          fgdValue: fgdSwitch.id,
+          k8sValue: null,
+          timestamp
+        });
+      }
+    }
+
+    // Check for unexpected switches in K8s
+    for (const k8sSwitch of k8sSwitches) {
+      if (!fgdSwitchMap.has(k8sSwitch.metadata.name.toLowerCase())) {
+        const switchName = k8sSwitch.metadata.name.charAt(0).toUpperCase() + k8sSwitch.metadata.name.slice(1);
+        driftItems.push({
+          id: `unexpected-switch-${k8sSwitch.metadata.name}`,
+          path: `switches/${switchName}`,
+          type: 'switch',
+          severity: 'medium',
+          description: `Unexpected switch ${switchName} found in K8s cluster`,
+          fgdValue: null,
+          k8sValue: k8sSwitch.metadata.name,
+          timestamp
+        });
+      }
+    }
+
+    // Compare existing switches for configuration drift
+    for (const fgdSwitch of fgdSwitches) {
+      const k8sSwitch = k8sSwitchMap.get(fgdSwitch.id.toLowerCase());
+      if (k8sSwitch) {
+        // Check model mismatch
+        if (fgdSwitch.model !== k8sSwitch.spec.model) {
+          driftItems.push({
+            id: `switch-model-mismatch-${fgdSwitch.id.toLowerCase()}`,
+            path: `switches/${fgdSwitch.id}/model`,
+            type: 'switch',
+            severity: 'high',
+            description: `Switch ${fgdSwitch.id} model mismatch`,
+            fgdValue: fgdSwitch.model,
+            k8sValue: k8sSwitch.spec.model,
+            timestamp
+          });
+        }
+
+        // Check port count mismatch
+        const fgdPortCount = fgdSwitch.ports;
+        const k8sPortCount = k8sSwitch.spec.ports.total;
+        if (fgdPortCount !== k8sPortCount) {
+          driftItems.push({
+            id: `switch-port-count-${fgdSwitch.id.toLowerCase()}`,
+            path: `switches/${fgdSwitch.id}/ports`,
+            type: 'switch',
+            severity: 'medium',
+            description: `Switch ${fgdSwitch.id} port count mismatch`,
+            fgdValue: fgdPortCount,
+            k8sValue: k8sPortCount,
+            timestamp
+          });
+        }
+
+        // Check for degraded switch health
+        if (k8sSwitch.status.health !== 'Healthy') {
+          driftItems.push({
+            id: `switch-health-${fgdSwitch.id.toLowerCase()}`,
+            path: `switches/${fgdSwitch.id}/health`,
+            type: 'switch',
+            severity: k8sSwitch.status.health === 'Failed' ? 'high' : 'medium',
+            description: `Switch ${fgdSwitch.id} health status: ${k8sSwitch.status.health}`,
+            fgdValue: 'Healthy',
+            k8sValue: k8sSwitch.status.health,
+            timestamp
+          });
+        }
+      }
+    }
+
+    return driftItems;
+  }
+
+  /**
+   * Compare FGD servers with K8s server status
+   */
+  private compareServers(fgdServers: Array<{ id: string; type: string; connections: number }>, k8sServers: ServerStatus[]): FksDriftItem[] {
+    const driftItems: FksDriftItem[] = [];
+    const timestamp = new Date().toISOString();
+
+    const fgdServerMap = new Map(fgdServers.map(srv => [srv.id.toLowerCase(), srv]));
+    const k8sServerMap = new Map(k8sServers.map(srv => [srv.metadata.name.toLowerCase(), srv]));
+
+    // Check for missing servers in K8s
+    for (const fgdServer of fgdServers) {
+      if (!k8sServerMap.has(fgdServer.id.toLowerCase())) {
+        driftItems.push({
+          id: `missing-server-${fgdServer.id.toLowerCase()}`,
+          path: `servers/${fgdServer.id}`,
+          type: 'server',
+          severity: 'high',
+          description: `Server ${fgdServer.id} missing from K8s cluster`,
+          fgdValue: fgdServer.id,
+          k8sValue: null,
+          timestamp
+        });
+      }
+    }
+
+    // Check for unexpected servers in K8s
+    for (const k8sServer of k8sServers) {
+      if (!fgdServerMap.has(k8sServer.metadata.name.toLowerCase())) {
+        const normalizedName = k8sServer.metadata.name.charAt(0).toUpperCase() + k8sServer.metadata.name.slice(1);
+        driftItems.push({
+          id: `unexpected-server-${k8sServer.metadata.name}`,
+          path: `servers/${normalizedName}`,
+          type: 'server',
+          severity: 'low',
+          description: `Unexpected server ${normalizedName} found in K8s cluster`,
+          fgdValue: null,
+          k8sValue: k8sServer.metadata.name,
+          timestamp
+        });
+      }
+    }
+
+    // Compare existing servers for configuration drift
+    for (const fgdServer of fgdServers) {
+      const k8sServer = k8sServerMap.get(fgdServer.id.toLowerCase());
+      if (k8sServer) {
+        // Check connectivity status
+        if (k8sServer.status.connectivity !== 'Connected') {
+          driftItems.push({
+            id: `server-connectivity-${fgdServer.id.toLowerCase()}`,
+            path: `servers/${fgdServer.id}/connectivity`,
+            type: 'server',
+            severity: k8sServer.status.connectivity === 'Disconnected' ? 'high' : 'medium',
+            description: `Server ${fgdServer.id} connectivity: ${k8sServer.status.connectivity}`,
+            fgdValue: 'Connected',
+            k8sValue: k8sServer.status.connectivity,
+            timestamp
+          });
+        }
+
+        // Skip switch connection check - not available in current data model
+      }
+    }
+
+    return driftItems;
+  }
+
+  /**
+   * Compare FGD connections with K8s connection status
+   */
+  private compareConnections(fgdConnections: WiringDiagram['connections'], k8sConnections: ConnectionStatus[]): FksDriftItem[] {
+    const driftItems: FksDriftItem[] = [];
+    const timestamp = new Date().toISOString();
+
+    // Create connection identifiers for comparison
+    const fgdConnectionMap = new Map(
+      fgdConnections.map(conn => [
+        `${conn.from.device}-${conn.from.port}-${conn.to.device}-${conn.to.port}`,
+        conn
+      ])
+    );
+
+    const k8sConnectionMap = new Map(
+      k8sConnections.map(conn => [
+        `${conn.spec.source.device}-${conn.spec.source.port}-${conn.spec.target.device}-${conn.spec.target.port}`,
+        conn
+      ])
+    );
+
+    // Check for missing connections in K8s
+    for (const [connId, fgdConnection] of fgdConnectionMap) {
+      if (!k8sConnectionMap.has(connId)) {
+        driftItems.push({
+          id: `missing-connection-${connId.toLowerCase()}`,
+          path: `connections/${connId}`,
+          type: 'connection',
+          severity: 'high',
+          description: `Connection ${fgdConnection.from.device}:${fgdConnection.from.port} → ${fgdConnection.to.device}:${fgdConnection.to.port} missing from K8s`,
+          fgdValue: `${fgdConnection.from.device}:${fgdConnection.from.port} → ${fgdConnection.to.device}:${fgdConnection.to.port}`,
+          k8sValue: null,
+          timestamp
+        });
+      }
+    }
+
+    // Check for unexpected connections in K8s
+    for (const [connId, k8sConnection] of k8sConnectionMap) {
+      if (!fgdConnectionMap.has(connId)) {
+        driftItems.push({
+          id: `unexpected-connection-${connId.toLowerCase()}`,
+          path: `connections/${connId}`,
+          type: 'connection',
+          severity: 'medium',
+          description: `Unexpected connection ${k8sConnection.spec.source.device}:${k8sConnection.spec.source.port} → ${k8sConnection.spec.target.device}:${k8sConnection.spec.target.port} found in K8s`,
+          fgdValue: null,
+          k8sValue: `${k8sConnection.spec.source.device}:${k8sConnection.spec.source.port} → ${k8sConnection.spec.target.device}:${k8sConnection.spec.target.port}`,
+          timestamp
+        });
+      }
+    }
+
+    // Check connection health for existing connections
+    for (const [connId, k8sConnection] of k8sConnectionMap) {
+      if (fgdConnectionMap.has(connId)) {
+        // Check link status
+        if (k8sConnection.status.linkStatus !== 'Up') {
+          const fgdConnection = fgdConnectionMap.get(connId)!;
+          driftItems.push({
+            id: `connection-status-${connId.toLowerCase()}`,
+            path: `connections/${connId}/status`,
+            type: 'connection',
+            severity: k8sConnection.status.linkStatus === 'Down' ? 'high' : 'medium',
+            description: `Connection ${fgdConnection.from.device}:${fgdConnection.from.port} → ${fgdConnection.to.device}:${fgdConnection.to.port} status: ${k8sConnection.status.linkStatus}`,
+            fgdValue: 'Up',
+            k8sValue: k8sConnection.status.linkStatus,
+            timestamp
+          });
+        }
+
+        // Check for errors
+        if (k8sConnection.status.errors > 0) {
+          const fgdConnection = fgdConnectionMap.get(connId)!;
+          driftItems.push({
+            id: `connection-errors-${connId.toLowerCase()}`,
+            path: `connections/${connId}/errors`,
+            type: 'connection',
+            severity: k8sConnection.status.errors > 10 ? 'high' : 'low',
+            description: `Connection ${fgdConnection.from.device}:${fgdConnection.from.port} → ${fgdConnection.to.device}:${fgdConnection.to.port} has ${k8sConnection.status.errors} errors`,
+            fgdValue: 0,
+            k8sValue: k8sConnection.status.errors,
+            timestamp
+          });
+        }
+      }
+    }
+
+    return driftItems;
+  }
+
+  /**
+   * Assess K8s API health based on response patterns
+   */
+  private assessK8sApiHealth(apiResponse: FabricServicesApiResponse): 'healthy' | 'degraded' | 'unavailable' {
+    // Check for signs of degraded API health
+    const totalResources = apiResponse.items.switches.length + apiResponse.items.servers.length + apiResponse.items.connections.length;
+    
+    if (totalResources === 0) {
+      return 'unavailable';
+    }
+
+    // Check for failed conditions across resources
+    let failedConditions = 0;
+    let totalConditions = 0;
+
+    [...apiResponse.items.switches, ...apiResponse.items.servers, ...apiResponse.items.connections].forEach(resource => {
+      totalConditions += resource.status.conditions.length;
+      failedConditions += resource.status.conditions.filter(c => c.status === 'False').length;
+    });
+
+    const failureRate = totalConditions > 0 ? failedConditions / totalConditions : 0;
+
+    if (failureRate > 0.5) {
+      return 'degraded';
+    }
+
+    return 'healthy';
+  }
+
+  /**
+   * Filter drift items by severity threshold
+   */
+  private filterBySeverity(driftItems: FksDriftItem[]): FksDriftItem[] {
+    if (this.options.severityThreshold === 'low') {
+      return driftItems;
+    }
+
+    const severityOrder = { low: 0, medium: 1, high: 2 };
+    const threshold = severityOrder[this.options.severityThreshold!];
+
+    return driftItems.filter(item => severityOrder[item.severity] >= threshold);
+  }
+}
+
+/**
+ * Convenience function for quick FKS drift detection
+ */
+export async function detectFksDrift(
+  fabricId: string,
+  k8sApiResponse: FabricServicesApiResponse,
+  fgdDiagram?: WiringDiagram,
+  options?: FksDriftDetectionOptions
+): Promise<FksDriftResult> {
+  const detector = new FksDriftDetector(fabricId, options);
+  return detector.detectDrift(k8sApiResponse, fgdDiagram);
+}

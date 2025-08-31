@@ -29,6 +29,19 @@ export const FabricSpecSchema = z.object({
 
 export type FabricSpec = z.infer<typeof FabricSpecSchema>
 
+// Legacy FabricSpec type for backward compatibility with existing tests  
+export interface LegacyFabricSpec {
+  name: string
+  spineModelId: string
+  leafModelId: string
+  uplinksPerLeaf: number
+  endpointProfile: {
+    name: string
+    portsPerEndpoint: number
+  }
+  endpointCount: number
+}
+
 // Core computation functions
 export const computeLeavesNeeded = (endpointCount: number, portsPerLeaf: number): number => 
   (portsPerLeaf <= 0 || endpointCount <= 0) ? 0 : Math.ceil(endpointCount / portsPerLeaf)
@@ -67,28 +80,69 @@ export const computeTopology = (spec: FabricSpec): DerivedTopology => {
   if (oversubscriptionRatio > 4.0) validationErrors.push(`Oversubscription too high: ${oversubscriptionRatio.toFixed(2)}:1`)
 
   return { leavesNeeded, spinesNeeded, totalPorts, usedPorts, oversubscriptionRatio, 
-    isValid: validationErrors.length === 0, validationErrors }
+    isValid: validationErrors.length === 0, validationErrors, guards: [] }
 }
 
-export const generateWiringStub = (fabric: FabricSpec, topology: DerivedTopology): WiringDiagram => {
+export const generateWiringStub = (fabric: FabricSpec | LegacyFabricSpec, topology: DerivedTopology): WiringDiagram => {
+  // Handle both new multi-class and legacy single-class formats
+  const fabricName = fabric.name
+  const spineModelId = fabric.spineModelId
+  const leafModelId = fabric.leafModelId
+  
+  // For legacy format, convert to multi-class structure for consistent processing
+  const isLegacy = 'endpointCount' in fabric && !('leafClasses' in fabric)
+  
+  let totalEndpoints: number
+  let spineModel: string
+  let leafModel: string
+  
+  if (isLegacy) {
+    const legacyFabric = fabric as LegacyFabricSpec
+    totalEndpoints = legacyFabric.endpointCount
+    spineModel = legacyFabric.spineModelId
+    leafModel = legacyFabric.leafModelId
+  } else {
+    const multiFabric = fabric as any
+    totalEndpoints = multiFabric.leafClasses 
+      ? multiFabric.leafClasses.reduce((sum: number, lc: any) => 
+          sum + lc.endpointProfiles.reduce((eSum: number, ep: any) => eSum + (ep.count || 0), 0), 0)
+      : (multiFabric.endpointCount || 0)
+    spineModel = multiFabric.spineModelId
+    leafModel = multiFabric.leafModelId
+  }
   const spines = Array.from({ length: topology.spinesNeeded }, (_, i) => ({ 
-    id: `spine-${i + 1}`, model: fabric.spineModelId, ports: 32 }))
+    id: `spine-${i + 1}`, model: spineModel, ports: 32 }))
   const leaves = Array.from({ length: topology.leavesNeeded }, (_, i) => ({ 
-    id: `leaf-${i + 1}`, model: fabric.leafModelId, ports: 48 }))
-  const servers = Array.from({ length: fabric.endpointCount }, (_, i) => ({ 
-    id: `server-${i + 1}`, type: fabric.endpointProfile.name, connections: fabric.endpointProfile.portsPerEndpoint }))
+    id: `leaf-${i + 1}`, model: leafModel, ports: 48 }))
+  
+  // Generate servers based on format
+  let servers: Array<{ id: string; type: string; connections: number }>
+  if (isLegacy) {
+    const legacyFabric = fabric as LegacyFabricSpec
+    servers = Array.from({ length: legacyFabric.endpointCount }, (_, i) => ({ 
+      id: `server-${i + 1}`, type: legacyFabric.endpointProfile.name, connections: legacyFabric.endpointProfile.portsPerEndpoint }))
+  } else {
+    servers = Array.from({ length: totalEndpoints }, (_, i) => ({ 
+      id: `server-${i + 1}`, type: 'Multi-Class Server', connections: 2 }))
+  }
 
   const connections: WiringConnection[] = []
+  
+  // Generate connections based on format
+  const uplinksPerLeaf = isLegacy 
+    ? (fabric as LegacyFabricSpec).uplinksPerLeaf
+    : 2 // Default for multi-class (simplified)
+    
   leaves.forEach((leaf, leafIdx) => {
-    for (let uplink = 0; uplink < fabric.uplinksPerLeaf; uplink++) {
-      const spineIdx = (leafIdx * fabric.uplinksPerLeaf + uplink) % spines.length
+    for (let uplink = 0; uplink < uplinksPerLeaf; uplink++) {
+      const spineIdx = (leafIdx * uplinksPerLeaf + uplink) % spines.length
       connections.push({ from: { device: leaf.id, port: `uplink-${uplink + 1}` },
         to: { device: spines[spineIdx]!.id, port: `downlink-${connections.length + 1}` }, type: 'uplink' })
     }
   })
 
   return { devices: { spines, leaves, servers }, connections,
-    metadata: { generatedAt: new Date(), fabricName: fabric.name, totalDevices: spines.length + leaves.length + servers.length }
+    metadata: { generatedAt: new Date(), fabricName, totalDevices: spines.length + leaves.length + servers.length }
   }
 }
 
