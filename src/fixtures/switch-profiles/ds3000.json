@@ -17,6 +17,9 @@
     "uplink": {
       "portProfile": "QSFP28-100G",
       "speedGbps": 100
+    },
+    "breakout": {
+      "supportsBreakout": false
     }
   },
   "meta": {

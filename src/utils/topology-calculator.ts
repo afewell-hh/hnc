@@ -8,7 +8,31 @@ import { SWITCH_CAPACITY } from '../types/derived-topology.types';
  * Updated to support multi-class leafClasses and legacy mode
  */
 
-// Calculate number of leaf switches needed (supports both leafClasses and legacy mode)
+// Calculate effective endpoint capacity with breakout support
+function getEffectiveEndpointCapacity(fabricSpec: FabricSpec, leafClassId?: string): number {
+  // Check if breakouts are enabled for this configuration
+  let breakoutEnabled = false;
+  let capacityMultiplier = 1;
+
+  if (fabricSpec.leafClasses && leafClassId) {
+    // Multi-class mode: check specific leaf class
+    const leafClass = fabricSpec.leafClasses.find(lc => lc.id === leafClassId);
+    breakoutEnabled = leafClass?.breakoutEnabled || false;
+  } else {
+    // Legacy single-class mode: check global breakout setting
+    breakoutEnabled = fabricSpec.breakoutEnabled || false;
+  }
+
+  // DS2000 supports 4x25G breakouts (hardcoded for now)
+  if (breakoutEnabled && fabricSpec.leafModelId === 'DS2000') {
+    capacityMultiplier = 4; // 4x25G breakout
+  }
+
+  const baseEndpointPorts = SWITCH_CAPACITY.DS2000.ports - (fabricSpec.uplinksPerLeaf || 2);
+  return baseEndpointPorts * capacityMultiplier;
+}
+
+// Calculate number of leaf switches needed (supports both leafClasses and legacy mode with breakouts)
 export function calculateLeavesNeeded(fabricSpec: FabricSpec): number {
   let totalEndpoints = 0;
   let redundantEndpoints = 0;
@@ -44,9 +68,12 @@ export function calculateLeavesNeeded(fabricSpec: FabricSpec): number {
   }
   
   const totalPortsNeeded = totalEndpoints + redundantEndpoints;
-  const availablePortsPerLeaf = SWITCH_CAPACITY.DS2000.ports - effectiveUplinksPerLeaf;
   
-  return Math.ceil(totalPortsNeeded / availablePortsPerLeaf);
+  // Calculate effective capacity considering breakouts
+  const effectiveCapacity = getEffectiveEndpointCapacity(fabricSpec);
+  const availablePortsPerLeaf = effectiveCapacity - effectiveUplinksPerLeaf;
+  
+  return Math.ceil(totalPortsNeeded / Math.max(1, availablePortsPerLeaf));
 }
 
 // Calculate number of spine switches needed (supports both leafClasses and legacy mode)

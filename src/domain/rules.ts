@@ -10,7 +10,7 @@ import type { FabricSpec, DerivedTopology, LeafClass } from '../app.types'
 // Rule severity levels
 export type RuleSeverity = 'error' | 'warning' | 'info'
 
-// Rule codes as specified in WP-OVR1
+// Rule codes as specified in WP-OVR1 and WP-IMP2 (import conflicts)
 export type RuleCode = 
   | 'SPINE_CAPACITY_EXCEEDED'
   | 'LEAF_CAPACITY_EXCEEDED'
@@ -18,6 +18,12 @@ export type RuleCode =
   | 'MC_LAG_ODD_LEAFS'
   | 'ES_LAG_SINGLE_NIC'
   | 'MODEL_PROFILE_MISMATCH'
+  // Import-specific rule codes (WP-IMP2)
+  | 'IMPORT_VALUE_CONFLICT'
+  | 'IMPORT_CAPACITY_MISMATCH'
+  | 'IMPORT_CONSTRAINT_VIOLATION'
+  | 'IMPORT_TOPOLOGY_INCONSISTENCY'
+  | 'IMPORT_MODEL_INCOMPATIBLE'
 
 // Structured rule violation result
 export interface RuleViolation {

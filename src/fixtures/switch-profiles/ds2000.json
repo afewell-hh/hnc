@@ -19,6 +19,11 @@
     "uplink": {
       "portProfile": "QSFP28-100G",
       "speedGbps": 100
+    },
+    "breakout": {
+      "supportsBreakout": true,
+      "breakoutType": "4x25G",
+      "capacityMultiplier": 4
     }
   },
   "meta": {

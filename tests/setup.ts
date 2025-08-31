@@ -1,4 +1,5 @@
 import { vi } from 'vitest'
+import '@testing-library/jest-dom'
 
 // Mock localStorage for tests
 Object.defineProperty(global, 'localStorage', {

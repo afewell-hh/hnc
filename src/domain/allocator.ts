@@ -258,10 +258,16 @@ export function allocateMultiClassUplinks(
         };
       }
       
+      // Calculate effective capacity considering breakouts
+      const baseCapacityPerLeaf = 48 - fabricSpec.uplinksPerLeaf;
+      const effectiveCapacityPerLeaf = (fabricSpec.breakoutEnabled && fabricSpec.leafModelId === 'DS2000') 
+        ? baseCapacityPerLeaf * 4  // 4x25G breakout multiplier
+        : baseCapacityPerLeaf;
+
       const legacySpec: AllocationSpec = {
         uplinksPerLeaf: fabricSpec.uplinksPerLeaf,
-        leavesNeeded: Math.ceil(fabricSpec.endpointCount / (48 - fabricSpec.uplinksPerLeaf)),
-        spinesNeeded: Math.max(1, Math.ceil((Math.ceil(fabricSpec.endpointCount / (48 - fabricSpec.uplinksPerLeaf)) * fabricSpec.uplinksPerLeaf) / 32)),
+        leavesNeeded: Math.ceil(fabricSpec.endpointCount / effectiveCapacityPerLeaf),
+        spinesNeeded: Math.max(1, Math.ceil((Math.ceil(fabricSpec.endpointCount / effectiveCapacityPerLeaf) * fabricSpec.uplinksPerLeaf) / 32)),
         endpointCount: fabricSpec.endpointCount
       };
       

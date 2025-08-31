@@ -13,9 +13,20 @@ export interface ProfilePorts {
   fabricAssignable: string[];
 }
 
+export interface BreakoutCapability {
+  /** Read-only flag indicating if port supports breakouts */
+  readonly supportsBreakout: boolean;
+  /** Breakout configuration (e.g., "4x25G" for 4x25Gbps lanes) */
+  readonly breakoutType?: string;
+  /** Multiplier for effective capacity when breakouts enabled */
+  readonly capacityMultiplier?: number;
+}
+
 export interface ProfileProfiles {
   endpoint: PortProfile;
   uplink: PortProfile;
+  /** Breakout capability for this switch model */
+  breakout?: BreakoutCapability;
 }
 
 export interface ProfileMeta {
@@ -44,4 +55,11 @@ export interface ProfileLoaderResult {
   mode: ProfileIngestMode;
   loadedAt: Date;
   errors: string[];
+}
+
+/** Helper type for breakout calculations */
+export interface BreakoutConfig {
+  enabled: boolean;
+  type?: string;
+  effectiveCapacity: number;
 }

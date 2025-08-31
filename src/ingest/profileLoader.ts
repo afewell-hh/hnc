@@ -50,6 +50,22 @@ function validateSwitchProfile(obj: any, modelId: string): obj is SwitchProfile 
   if (!profiles.endpoint || !profiles.uplink) {
     throw new Error(`Invalid profile for ${modelId}: missing endpoint or uplink profiles`);
   }
+  
+  // Validate breakout capability if present
+  if (profiles.breakout) {
+    const breakout = profiles.breakout;
+    if (typeof breakout.supportsBreakout !== 'boolean') {
+      throw new Error(`Invalid profile for ${modelId}: breakout.supportsBreakout must be boolean`);
+    }
+    if (breakout.supportsBreakout) {
+      if (breakout.breakoutType && typeof breakout.breakoutType !== 'string') {
+        throw new Error(`Invalid profile for ${modelId}: breakout.breakoutType must be string`);
+      }
+      if (breakout.capacityMultiplier && typeof breakout.capacityMultiplier !== 'number') {
+        throw new Error(`Invalid profile for ${modelId}: breakout.capacityMultiplier must be number`);
+      }
+    }
+  }
 
   // Validate individual profile properties
   ['endpoint', 'uplink'].forEach(profileType => {
