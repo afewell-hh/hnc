@@ -5,6 +5,8 @@ import { fabricDesignMachine } from './app.machine'
 import { FabricList } from './FabricList'
 import { DriftSection } from './ui/DriftSection'
 import { ErrorBoundary } from './ui/ErrorBoundary'
+import { PortAllocationTable } from './ui/PortAllocationTable'
+import { AllocationErrors } from './ui/AllocationErrors'
 import type { DriftStatus } from './drift/types.js'
 import type { FabricDesignContext } from './app.types'
 
@@ -189,6 +191,20 @@ function FabricDesigner({ fabricId, onBackToList }: { fabricId: string; onBackTo
           <p>Oversubscription ratio: {state.context.computedTopology.oversubscriptionRatio}:1</p>
           <p>Valid: {state.context.computedTopology.isValid ? 'Yes' : 'No'}</p>
         </div>
+      )}
+
+      {/* Show allocation errors if present */}
+      {state.context.allocationResult?.issues && state.context.allocationResult.issues.length > 0 && (
+        <AllocationErrors issues={state.context.allocationResult.issues} />
+      )}
+
+      {/* Show port allocation table if allocation succeeded */}
+      {state.context.computedTopology && state.context.allocationResult && 
+       state.context.allocationResult.issues.length === 0 && state.context.allocationResult.leafMaps.length > 0 && (
+        <PortAllocationTable 
+          allocationResult={state.context.allocationResult}
+          spinesNeeded={state.context.computedTopology.spinesNeeded}
+        />
       )}
 
       {state.matches('saved') && (

@@ -51,9 +51,45 @@ export interface WiringDiagram {
 export interface FabricDesignContext {
   config: Partial<FabricSpec>
   computedTopology: DerivedTopology | null
+  allocationResult?: AllocationResult | null
+  switchProfiles?: {
+    leaf: SwitchProfile;
+    spine: SwitchProfile;
+  } | null
   errors: string[]
   savedToFgd: boolean
   loadedDiagram: WiringDiagram | null
+}
+
+// Import allocation types
+export interface AllocationResult {
+  leafMaps: LeafAllocation[]
+  spineUtilization: number[]
+  issues: string[]
+}
+
+export interface LeafAllocation {
+  leafId: number
+  uplinks: UplinkAssignment[]
+}
+
+export interface UplinkAssignment {
+  port: string
+  toSpine: number
+}
+
+export interface SwitchProfile {
+  modelId: string
+  roles: string[]
+  ports: {
+    endpointAssignable: string[]
+    fabricAssignable: string[]
+  }
+  profiles: {
+    endpoint: { portProfile: string | null; speedGbps: number }
+    uplink: { portProfile: string | null; speedGbps: number }
+  }
+  meta: { source: string; version: string }
 }
 
 export type FabricDesignEvent =

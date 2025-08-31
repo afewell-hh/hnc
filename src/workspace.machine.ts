@@ -1,8 +1,7 @@
 import { createMachine, assign } from 'xstate'
 import { WorkspaceContext, WorkspaceEvent, FabricSummary } from './fabric.types.js'
-
+import { gitService } from './features/git.service.js'
 let fabricIdCounter = 0
-
 export const workspaceMachine = createMachine({
   id: 'workspace',
   initial: 'listing',
@@ -23,6 +22,35 @@ export const workspaceMachine = createMachine({
                   : fabric
               )
           })
+        },
+        UPDATE_FABRIC_GIT: {
+          actions: assign({
+            fabrics: ({ context, event }) =>
+              context.fabrics.map(fabric =>
+                fabric.id === event.fabricId
+                  ? { ...fabric, gitStatus: event.gitStatus, lastModified: new Date() }
+                  : fabric
+              )
+          })
+        },
+        CHECK_GIT_STATUS: {
+          actions: async ({ context, event }) => {
+            if (gitService.isEnabled()) {
+              try {
+                const status = await gitService.getStatus()
+                // If specific fabric requested, update only that one
+                if (event.fabricId) {
+                  // This would need to be dispatched as an event in real implementation
+                  console.log(`Git status for ${event.fabricId}:`, status)
+                } else {
+                  // Global Git status check
+                  console.log('Global Git status:', status)
+                }
+              } catch (error) {
+                console.warn('Git status check failed:', error)
+              }
+            }
+          }
         },
         CREATE_FABRIC: [
           {
@@ -63,8 +91,7 @@ export const workspaceMachine = createMachine({
         SELECT_FABRIC: {
           target: 'selected',
           actions: assign({
-            selectedFabricId: ({ event }) => event.fabricId,
-            errors: []
+            selectedFabricId: ({ event }) => event.fabricId, errors: []
           })
         },
         DELETE_FABRIC: {
@@ -160,15 +187,11 @@ export const workspaceMachine = createMachine({
             })
           }
         ],
-        LIST_FABRICS: {
-          target: 'listing',
-          actions: assign({ errors: [] })
-        },
+        LIST_FABRICS: { target: 'listing', actions: assign({ errors: [] }) },
         SELECT_FABRIC: {
           target: 'selected',
           actions: assign({
-            selectedFabricId: ({ event }) => event.fabricId,
-            errors: []
+            selectedFabricId: ({ event }) => event.fabricId, errors: []
           })
         }
       }

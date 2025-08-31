@@ -1,5 +1,6 @@
 import type { WiringDiagram } from '../app.types.js'
 import { serializeWiringDiagram, deserializeWiringDiagram } from './yaml.js'
+import { gitService, generateCommitMessage } from '../features/git.service.js'
 
 // Platform-specific implementations
 interface FGDPlatform {
@@ -204,6 +205,7 @@ export interface FGDSaveResult {
   fgdId: string
   fabricPath: string
   filesWritten: string[]
+  gitCommit?: string // Git commit hash if Git enabled
   error?: string
 }
 
@@ -218,6 +220,7 @@ export interface FGDLoadResult {
 /**
  * Saves a WiringDiagram to local FGD directory structure
  * Creates: ./fgd/{fabric-id}/servers.yaml, switches.yaml, connections.yaml
+ * Also commits to Git if Git feature is enabled
  */
 export async function saveFGD(diagram: WiringDiagram, options: FGDSaveOptions): Promise<FGDSaveResult> {
   const baseDir = options.baseDir || './fgd'
@@ -245,12 +248,32 @@ export async function saveFGD(diagram: WiringDiagram, options: FGDSaveOptions): 
       platform.writeFile(connectionPath, yamls.connections, 'utf8')
     ])
 
-    return {
+    const result: FGDSaveResult = {
       success: true,
       fgdId,
       fabricPath,
       filesWritten: [serverPath, switchPath, connectionPath]
     }
+
+    // Git integration: Write to Git and commit if enabled
+    if (gitService.isEnabled()) {
+      try {
+        const gitWriteSuccess = await gitService.writeFabric(options.fabricId, diagram)
+        if (gitWriteSuccess) {
+          const commitMessage = generateCommitMessage(options.fabricId, diagram)
+          const commitSuccess = await gitService.commitChanges(commitMessage)
+          if (commitSuccess) {
+            const status = await gitService.getStatus()
+            result.gitCommit = status.lastCommit
+          }
+        }
+      } catch (error) {
+        // Git operations are optional - log but don't fail the save
+        console.warn('Git operations failed during save:', error)
+      }
+    }
+
+    return result
 
   } catch (error) {
     return {
@@ -266,12 +289,31 @@ export async function saveFGD(diagram: WiringDiagram, options: FGDSaveOptions): 
 /**
  * Loads a WiringDiagram from local FGD directory structure
  * Reads: ./fgd/{fabric-id}/servers.yaml, switches.yaml, connections.yaml
+ * Tries Git first if enabled, falls back to platform files
  */
 export async function loadFGD(options: FGDLoadOptions): Promise<FGDLoadResult> {
   const baseDir = options.baseDir || './fgd'
   const fabricPath = platform.join(baseDir, options.fabricId)
   
-  // Define file paths
+  // Try Git first if enabled
+  if (gitService.isEnabled()) {
+    try {
+      const gitDiagram = await gitService.readFabric(options.fabricId)
+      if (gitDiagram) {
+        return {
+          success: true,
+          diagram: gitDiagram,
+          fabricPath,
+          filesRead: [`git:${fabricPath}/servers.yaml`, `git:${fabricPath}/switches.yaml`, `git:${fabricPath}/connections.yaml`]
+        }
+      }
+    } catch (error) {
+      // Git read failed, fall back to platform files
+      console.warn('Git load failed, falling back to platform files:', error)
+    }
+  }
+  
+  // Define file paths for platform fallback
   const serverPath = platform.join(fabricPath, 'servers.yaml')
   const switchPath = platform.join(fabricPath, 'switches.yaml')
   const connectionPath = platform.join(fabricPath, 'connections.yaml')
