@@ -1,0 +1,44 @@
+# Development values for HNC
+# Override values.yaml for development environment
+
+# Use development image
+image:
+  repository: hnc-dev
+  tag: "latest"
+  pullPolicy: Always
+
+# Enable all features for development
+env:
+  HNC_VERBOSE: "true"
+  FEATURE_GIT: "true"
+  FEATURE_K8S: "true"
+  FEATURE_HHFAB: "true"
+  FEATURE_GH_PR: "true"
+
+# Development ingress
+ingress:
+  enabled: true
+  hosts:
+    - host: hnc-dev.local
+      paths:
+        - path: /
+          pathType: Prefix
+
+# Less restrictive resources
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 50m
+    memory: 64Mi
+
+# Enable autoreload for development
+podAnnotations:
+  devmode: "true"
+
+# Enable persistence for dev data
+persistence:
+  enabled: true
+  size: 500Mi
+  storageClass: standard

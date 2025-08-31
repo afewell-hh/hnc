@@ -1,0 +1,60 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: hnc
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/your-org/hnc
+    targetRevision: HEAD
+    path: deploy/charts/hnc
+    helm:
+      values: |
+        # Environment-specific values for HNC
+        image:
+          repository: your-registry/hnc
+          tag: "0.5.0-alpha"
+        
+        ingress:
+          enabled: true
+          hosts:
+            - host: hnc.k3s.local
+              paths:
+                - path: /
+                  pathType: Prefix
+        
+        # Feature flags for production deployment
+        env:
+          FEATURE_GIT: "true"
+          FEATURE_K8S: "true"
+          FEATURE_HHFAB: "false"
+          FEATURE_GH_PR: "false"
+          HNC_VERBOSE: "false"
+        
+        # Production resource limits
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        
+        # Enable persistence for configuration storage
+        persistence:
+          enabled: true
+          size: 2Gi
+          storageClass: local-path
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: hnc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - RespectIgnoreDifferences=true

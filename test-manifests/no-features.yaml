@@ -1,0 +1,204 @@
+---
+# Source: hnc/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: hnc
+  labels:
+    helm.sh/chart: hnc-0.5.0-alpha
+    app.kubernetes.io/name: hnc
+    app.kubernetes.io/instance: hnc
+    app.kubernetes.io/version: "0.5.0-alpha"
+    app.kubernetes.io/managed-by: Helm
+automountServiceAccountToken: true
+---
+# Source: hnc/templates/configmap.yaml
+# Environment configuration ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hnc-env
+  labels:
+    helm.sh/chart: hnc-0.5.0-alpha
+    app.kubernetes.io/name: hnc
+    app.kubernetes.io/instance: hnc
+    app.kubernetes.io/version: "0.5.0-alpha"
+    app.kubernetes.io/managed-by: Helm
+data:
+  # Core Configuration
+  HNC_VERBOSE: "false"
+  
+  # Feature Flags
+  FEATURE_GIT: "false"
+  FEATURE_K8S: "false"
+  FEATURE_HHFAB: "false"
+  FEATURE_GH_PR: "false"
+  
+  # Integration Configuration
+  GIT_REMOTE: "origin"
+  HHFAB: "/usr/local/bin/hhfab"
+  
+  # Test Configuration
+  TEST_FGD_FILE: "test-output/test-fabric.yaml"
+  TEST_K8S_NAMESPACE: "hnc-test"
+  
+  # Performance Configuration
+  PLAYWRIGHT_MAX_WORKERS: "1"
+  VITEST_MAX_WORKERS: "4"
+  
+  # Kubernetes configuration (if not using secrets)
+---
+# Source: hnc/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: hnc
+  labels:
+    helm.sh/chart: hnc-0.5.0-alpha
+    app.kubernetes.io/name: hnc
+    app.kubernetes.io/instance: hnc
+    app.kubernetes.io/version: "0.5.0-alpha"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: hnc
+    app.kubernetes.io/instance: hnc
+---
+# Source: hnc/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hnc
+  labels:
+    helm.sh/chart: hnc-0.5.0-alpha
+    app.kubernetes.io/name: hnc
+    app.kubernetes.io/instance: hnc
+    app.kubernetes.io/version: "0.5.0-alpha"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: hnc
+      app.kubernetes.io/instance: hnc
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: hnc
+        app.kubernetes.io/instance: hnc
+    spec:
+      securityContext:
+        fsGroup: 2000
+      serviceAccountName: hnc
+      containers:
+        - name: hnc
+          securityContext:
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+          image: "nginx:1.25-alpine"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+          env:
+            - name: FEATURE_GH_PR
+              value: "false"
+            - name: FEATURE_GIT
+              value: "false"
+            - name: FEATURE_HHFAB
+              value: "false"
+            - name: FEATURE_K8S
+              value: "false"
+            - name: GITHUB_TOKEN
+              value: ""
+            - name: GIT_REMOTE
+              value: "origin"
+            - name: HHFAB
+              value: "/usr/local/bin/hhfab"
+            - name: HNC_VERBOSE
+              value: "false"
+            - name: KUBECONFIG
+              value: ""
+            - name: PLAYWRIGHT_MAX_WORKERS
+              value: "1"
+            - name: TEST_FGD_FILE
+              value: "test-output/test-fabric.yaml"
+            - name: TEST_K8S_NAMESPACE
+              value: "hnc-test"
+            - name: VITEST_MAX_WORKERS
+              value: "4"
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: var-cache-nginx
+              mountPath: /var/cache/nginx
+            - name: var-run
+              mountPath: /var/run
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: var-cache-nginx
+          emptyDir: {}
+        - name: var-run
+          emptyDir: {}
+---
+# Source: hnc/templates/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hnc
+  labels:
+    helm.sh/chart: hnc-0.5.0-alpha
+    app.kubernetes.io/name: hnc
+    app.kubernetes.io/instance: hnc
+    app.kubernetes.io/version: "0.5.0-alpha"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  rules:
+    - host: "hnc.local"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: hnc
+                port:
+                  number: 80

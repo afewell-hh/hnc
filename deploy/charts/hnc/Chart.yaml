@@ -1,0 +1,17 @@
+apiVersion: v2
+name: hnc
+description: HNC (Hybrid Network Calculator) - Network fabric configuration and deployment tool
+version: 0.5.0-alpha
+appVersion: "0.5.0-alpha"
+type: application
+keywords:
+  - networking
+  - fabric
+  - configuration
+  - calculator
+home: https://github.com/your-org/hnc
+sources:
+  - https://github.com/your-org/hnc
+maintainers:
+  - name: HNC Team
+    email: team@example.com

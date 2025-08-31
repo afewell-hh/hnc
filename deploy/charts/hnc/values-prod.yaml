@@ -1,0 +1,76 @@
+# Production values for HNC
+# Override values.yaml for production environment
+
+# Production image
+image:
+  repository: your-registry.com/hnc
+  tag: "0.5.0-alpha"
+  pullPolicy: IfNotPresent
+
+# Production replicas
+replicaCount: 2
+
+# Production feature flags - more conservative
+env:
+  HNC_VERBOSE: "false"
+  FEATURE_GIT: "true"
+  FEATURE_K8S: "true"
+  FEATURE_HHFAB: "false"  # Disable until validated
+  FEATURE_GH_PR: "false"  # Disable for security
+
+# TLS-enabled ingress
+ingress:
+  enabled: true
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    - host: hnc.company.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: hnc-tls
+      hosts:
+        - hnc.company.com
+
+# Production resources
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# Enable autoscaling
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+
+# Enable pod disruption budget
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+# Production persistence
+persistence:
+  enabled: true
+  size: 10Gi
+  storageClass: gp2
+
+# Security context
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 10001
+
+podSecurityContext:
+  fsGroup: 10001
+  runAsGroup: 10001
+  runAsUser: 10001
