@@ -13,7 +13,7 @@ export interface Issue {
   field?: string // field that caused the issue
   overridable?: boolean // can this issue be manually overridden
   overridden?: boolean // has this issue been manually overridden
-  category: 'validation' | 'constraint' | 'optimization' | 'configuration'
+  category: 'validation' | 'constraint' | 'optimization' | 'configuration' | 'import-conflict'
 }
 
 // Override state tracking for fields
@@ -105,6 +105,13 @@ export interface WiringDiagram {
   }
 }
 
+// Import progress tracking (WP-IMP3)
+export interface ImportProgress {
+  status: 'idle' | 'importing' | 'success' | 'error'
+  message?: string
+  progress?: number
+}
+
 // XState types for machine context and events
 export interface FabricDesignContext {
   config: Partial<FabricSpec>
@@ -123,6 +130,11 @@ export interface FabricDesignContext {
   issues: Issue[]
   fieldOverrides: FieldOverride[]
   rulesEngineEnabled: boolean
+  // Import progress tracking (WP-IMP3)
+  importProgress: ImportProgress
+  // Import conflict resolution (WP-IMP2)
+  importConflicts: import('./domain/import-conflict-resolver').ImportConflict[]
+  importedSpec?: FabricSpec | null
 }
 
 // Import allocation types
@@ -152,6 +164,11 @@ export interface SwitchProfile {
   profiles: {
     endpoint: { portProfile: string | null; speedGbps: number }
     uplink: { portProfile: string | null; speedGbps: number }
+    breakout?: {
+      supportsBreakout: boolean
+      breakoutType?: string
+      capacityMultiplier?: number
+    }
   }
   meta: { source: string; version: string }
 }
@@ -164,6 +181,15 @@ export type FabricDesignEvent =
   | { type: 'RESET' }
   | { type: 'OVERRIDE_ISSUE'; issueId: string; reason: string }
   | { type: 'CLEAR_OVERRIDE'; fieldPath: string }
+  // Import events (WP-IMP3)
+  | { type: 'START_IMPORT'; fabricSpec: FabricSpec }
+  | { type: 'IMPORT_SUCCESS' }
+  | { type: 'IMPORT_FAILED'; error: string }
+  // Import conflict resolution events (WP-IMP2)
+  | { type: 'IMPORT_SPEC'; fabricSpec: FabricSpec }
+  | { type: 'RESOLVE_IMPORT_CONFLICT'; conflictId: string; actionType: 'accept' | 'reject' | 'modify'; modifyValue?: any }
+  | { type: 'DETECT_IMPORT_CONFLICTS' }
+  | { type: 'CLEAR_IMPORT_CONFLICTS' }
 
 // LAG constraint types for future WPs
 export interface LAGConstraints {
@@ -193,6 +219,7 @@ export interface LeafClass {
   lag?: LAGConstraints
   count?: number // number of leaves in this class
   mcLag?: boolean // MC-LAG constraint flag
+  breakoutEnabled?: boolean // Enable breakout for this leaf class
   metadata?: Record<string, any>
   // Field provenance tracking per leaf class
   provenance?: {
@@ -233,6 +260,7 @@ export interface FabricSpec {
   uplinksPerLeaf?: number
   endpointProfile?: EndpointProfile
   endpointCount?: number
+  breakoutEnabled?: boolean // Simple breakout toggle for single-class mode
   
   // Common fields
   metadata?: Record<string, any>

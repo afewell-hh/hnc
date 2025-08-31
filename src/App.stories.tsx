@@ -373,6 +373,56 @@ export const LegacySaveAfterCompute: Story = {
   }
 }
 
+// WP-UXG1 User Mode Integration Stories
+export const UserModeToggleIntegration: Story = {
+  name: 'WP-UXG1 - User Mode Toggle Integration',
+  tags: ['ci'],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    
+    // Create and select fabric to access designer
+    const createButton = canvas.getByRole('button', { name: 'Create New Fabric' })
+    await userEvent.click(createButton)
+    
+    const nameInput = canvas.getByPlaceholderText('Enter fabric name...')
+    await userEvent.type(nameInput, 'UXG1 Integration Test')
+    
+    const submitButton = canvas.getByRole('button', { name: 'Create' })
+    await userEvent.click(submitButton)
+    
+    const selectButton = canvas.getByRole('button', { name: 'Select' })
+    await userEvent.click(selectButton)
+    
+    // Verify mode toggle is present in fabric designer
+    await expect(canvas.getByTestId('mode-toggle')).toBeInTheDocument()
+    
+    // Verify guided mode is default
+    const guidedButton = canvas.getByTestId('guided-mode-button')
+    await expect(guidedButton).toHaveAttribute('aria-pressed', 'true')
+    
+    // Test mode switching
+    const expertButton = canvas.getByTestId('expert-mode-button')
+    await userEvent.click(expertButton)
+    await expect(expertButton).toHaveAttribute('aria-pressed', 'true')
+    await expect(guidedButton).toHaveAttribute('aria-pressed', 'false')
+    
+    // Switch back to guided
+    await userEvent.click(guidedButton)
+    await expect(guidedButton).toHaveAttribute('aria-pressed', 'true')
+    
+    // Verify guided hints are visible
+    const inlineHints = canvas.queryAllByTestId('inline-hint')
+    expect(inlineHints.length).toBeGreaterThan(0)
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Integration test for WP-UXG1 user mode toggle functionality within the main app workflow.'
+      }
+    }
+  }
+}
+
 // Allocation Integration Stories (WP-A2)
 export const AllocatorHappyPath: Story = {
   name: 'Allocator Happy Path',

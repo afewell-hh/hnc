@@ -1,19 +1,24 @@
 import React from 'react';
 import type { Issue, FieldOverride } from '../app.types';
+import type { ImportConflict, ConflictResolutionAction } from '../domain/import-conflict-resolver';
 
 interface IssuesPanelProps {
   issues: Issue[];
   fieldOverrides?: FieldOverride[];
+  importConflicts?: ImportConflict[];
   onOverrideIssue?: (issueId: string, reason: string) => void;
   onClearOverride?: (fieldPath: string) => void;
+  onResolveImportConflict?: (conflictId: string, actionType: 'accept' | 'reject' | 'modify', modifyValue?: any) => void;
   className?: string;
 }
 
 export function IssuesPanel({ 
   issues, 
-  fieldOverrides = [], 
+  fieldOverrides = [],
+  importConflicts = [],
   onOverrideIssue, 
   onClearOverride,
+  onResolveImportConflict,
   className 
 }: IssuesPanelProps) {
   const [expandedIssues, setExpandedIssues] = React.useState<Set<string>>(new Set());
@@ -116,8 +121,10 @@ export function IssuesPanel({
   const warningCount = issues.filter(i => i.type === 'warning').length;
   const infoCount = issues.filter(i => i.type === 'info').length;
   const overriddenCount = issues.filter(i => i.overridden).length;
+  const importConflictCount = importConflicts.length;
+  const unresolvedConflictCount = importConflicts.filter(c => !c.overridden).length;
 
-  if (issueCount === 0) {
+  if (issueCount === 0 && importConflictCount === 0) {
     return (
       <div 
         className={`issues-panel no-issues ${className || ''}`}
@@ -202,6 +209,11 @@ export function IssuesPanel({
               <span aria-hidden="true">🔧</span> {overriddenCount} Overridden
             </span>
           )}
+          {importConflictCount > 0 && (
+            <span style={{ color: '#e83e8c' }}>
+              <span aria-hidden="true">⚡</span> {unresolvedConflictCount}/{importConflictCount} Import Conflicts
+            </span>
+          )}
         </div>
         
         <p style={{ 
@@ -212,6 +224,33 @@ export function IssuesPanel({
           Review the issues below. Some can be manually overridden if needed.
         </p>
       </div>
+
+      {/* Import Conflicts Section */}
+      {importConflicts.length > 0 && (
+        <div className="import-conflicts-section" style={{ marginBottom: '1rem' }}>
+          <h4 style={{ 
+            margin: '0 0 0.75rem 0',
+            color: '#e83e8c',
+            fontSize: '1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            paddingBottom: '0.5rem',
+            borderBottom: '2px solid #e83e8c'
+          }}>
+            <span aria-hidden="true">⚡</span>
+            Import Conflicts ({unresolvedConflictCount} unresolved)
+          </h4>
+          
+          {importConflicts.map((conflict, index) => (
+            <ImportConflictItem
+              key={conflict.id}
+              conflict={conflict}
+              onResolve={onResolveImportConflict}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Issues List */}
       <div className="issues-list" role="list">
@@ -291,14 +330,14 @@ export function IssuesPanel({
                           style={{
                             fontSize: '0.75rem',
                             padding: '0.125rem 0.5rem',
-                            backgroundColor: '#6c757d',
+                            backgroundColor: issue.category === 'import-conflict' ? '#e83e8c' : '#6c757d',
                             color: 'white',
                             borderRadius: '12px',
                             fontWeight: 'bold'
                           }}
-                          aria-label="This issue has been manually overridden"
+                          aria-label={issue.category === 'import-conflict' ? 'This import conflict has been resolved' : 'This issue has been manually overridden'}
                         >
-                          OVERRIDDEN
+                          {issue.category === 'import-conflict' ? 'IMPORT RESOLVED' : 'OVERRIDDEN'}
                         </span>
                       )}
                       <span 
@@ -580,6 +619,317 @@ export function IssuesPanel({
           border-bottom: 1px solid #e9ecef;
         }
       `}</style>
+    </div>
+  );
+}
+
+/**
+ * Component for rendering individual import conflicts with resolution actions
+ */
+interface ImportConflictItemProps {
+  conflict: ImportConflict;
+  onResolve?: (conflictId: string, actionType: 'accept' | 'reject' | 'modify', modifyValue?: any) => void;
+}
+
+function ImportConflictItem({ conflict, onResolve }: ImportConflictItemProps) {
+  const [modifyValue, setModifyValue] = React.useState<string>('');
+  const [selectedAction, setSelectedAction] = React.useState<'accept' | 'reject' | 'modify' | null>(null);
+
+  const getConflictTypeIcon = (conflictType: string): string => {
+    switch (conflictType) {
+      case 'value': return '🔄';
+      case 'capacity': return '📊';
+      case 'constraint': return '⚠️';
+      case 'topology': return '🔗';
+      case 'model': return '🔧';
+      default: return '⚡';
+    }
+  };
+
+  const getConflictTypeColor = (conflictType: string): string => {
+    switch (conflictType) {
+      case 'value': return '#007bff';
+      case 'capacity': return '#dc3545';
+      case 'constraint': return '#ffc107';
+      case 'topology': return '#17a2b8';
+      case 'model': return '#6f42c1';
+      default: return '#e83e8c';
+    }
+  };
+
+  const handleResolve = (actionType: 'accept' | 'reject' | 'modify') => {
+    if (!onResolve) return;
+    
+    if (actionType === 'modify' && !modifyValue.trim()) {
+      return; // Don't resolve without a modify value
+    }
+    
+    onResolve(
+      conflict.id, 
+      actionType, 
+      actionType === 'modify' ? modifyValue.trim() : undefined
+    );
+  };
+
+  if (conflict.overridden) {
+    // Show resolved state
+    return (
+      <div 
+        className="import-conflict-resolved"
+        style={{
+          border: '1px solid #28a745',
+          borderLeft: '4px solid #28a745',
+          borderRadius: '4px',
+          padding: '1rem',
+          marginBottom: '0.75rem',
+          backgroundColor: '#d4edda',
+          opacity: 0.8
+        }}
+      >
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center',
+          gap: '0.5rem',
+          color: '#155724'
+        }}>
+          <span aria-hidden="true">✅</span>
+          <strong>{conflict.title}</strong>
+          <span 
+            className="resolved-chip"
+            style={{
+              fontSize: '0.75rem',
+              padding: '0.125rem 0.5rem',
+              backgroundColor: '#28a745',
+              color: 'white',
+              borderRadius: '12px',
+              fontWeight: 'bold'
+            }}
+          >
+            RESOLVED
+          </span>
+        </div>
+        <p style={{ margin: '0.5rem 0 0 1.5rem', fontSize: '0.9rem', color: '#155724' }}>
+          {conflict.message}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div 
+      className="import-conflict-item"
+      data-testid={`import-conflict-${conflict.id}`}
+      style={{
+        border: '1px solid #dee2e6',
+        borderLeft: `4px solid ${getConflictTypeColor(conflict.importMetadata.conflictType)}`,
+        borderRadius: '4px',
+        padding: '1rem',
+        marginBottom: '0.75rem',
+        backgroundColor: 'white'
+      }}
+    >
+      {/* Conflict Header */}
+      <div style={{ marginBottom: '0.75rem' }}>
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center',
+          gap: '0.5rem',
+          marginBottom: '0.25rem'
+        }}>
+          <span aria-hidden="true">
+            {getConflictTypeIcon(conflict.importMetadata.conflictType)}
+          </span>
+          <strong style={{ color: getConflictTypeColor(conflict.importMetadata.conflictType) }}>
+            {conflict.title}
+          </strong>
+          <span 
+            className="conflict-type-badge"
+            style={{
+              fontSize: '0.75rem',
+              padding: '0.125rem 0.5rem',
+              backgroundColor: getConflictTypeColor(conflict.importMetadata.conflictType),
+              color: 'white',
+              borderRadius: '12px',
+              fontWeight: 'bold',
+              textTransform: 'uppercase'
+            }}
+          >
+            {conflict.importMetadata.conflictType}
+          </span>
+          <span 
+            className="confidence-badge"
+            style={{
+              fontSize: '0.75rem',
+              padding: '0.125rem 0.5rem',
+              backgroundColor: conflict.importMetadata.confidence === 'high' ? '#28a745' : 
+                             conflict.importMetadata.confidence === 'medium' ? '#ffc107' : '#6c757d',
+              color: 'white',
+              borderRadius: '12px'
+            }}
+          >
+            {conflict.importMetadata.confidence} confidence
+          </span>
+        </div>
+        
+        <p style={{ 
+          margin: 0, 
+          color: '#495057',
+          fontSize: '0.9rem'
+        }}>
+          {conflict.message}
+        </p>
+        
+        {/* Value Comparison */}
+        <div style={{ 
+          display: 'flex',
+          gap: '1rem',
+          margin: '0.75rem 0',
+          padding: '0.75rem',
+          backgroundColor: '#f8f9fa',
+          borderRadius: '4px',
+          fontSize: '0.85rem'
+        }}>
+          <div style={{ flex: 1 }}>
+            <strong style={{ color: '#dc3545' }}>Imported:</strong>
+            <br />
+            <code style={{ 
+              backgroundColor: '#fff5f5',
+              padding: '0.25rem',
+              borderRadius: '3px',
+              border: '1px solid #f5c6cb'
+            }}>
+              {JSON.stringify(conflict.importMetadata.importedValue)}
+            </code>
+          </div>
+          <div style={{ flex: 1 }}>
+            <strong style={{ color: '#007bff' }}>Current:</strong>
+            <br />
+            <code style={{ 
+              backgroundColor: '#f8f9ff',
+              padding: '0.25rem',
+              borderRadius: '3px',
+              border: '1px solid #b8c6f0'
+            }}>
+              {JSON.stringify(conflict.importMetadata.computedValue)}
+            </code>
+          </div>
+        </div>
+      </div>
+
+      {/* Resolution Actions */}
+      <div className="conflict-resolution-actions">
+        <h5 style={{ 
+          margin: '0 0 0.5rem 0',
+          color: '#495057',
+          fontSize: '0.9rem'
+        }}>
+          Choose Resolution:
+        </h5>
+        
+        <div style={{ 
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.5rem'
+        }}>
+          {conflict.resolutionActions.map((action, actionIndex) => (
+            <div 
+              key={actionIndex}
+              className="resolution-action"
+              style={{
+                border: selectedAction === action.type ? '2px solid #007bff' : '1px solid #dee2e6',
+                borderRadius: '4px',
+                padding: '0.75rem',
+                backgroundColor: selectedAction === action.type ? '#f8f9ff' : 'white',
+                cursor: 'pointer'
+              }}
+              onClick={() => setSelectedAction(action.type)}
+            >
+              <div style={{ 
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '0.5rem'
+              }}>
+                <input
+                  type="radio"
+                  name={`conflict-action-${conflict.id}`}
+                  checked={selectedAction === action.type}
+                  onChange={() => setSelectedAction(action.type)}
+                  style={{ marginTop: '0.125rem' }}
+                />
+                <div style={{ flex: 1 }}>
+                  <strong style={{ fontSize: '0.85rem' }}>
+                    {action.label}
+                  </strong>
+                  <p style={{ 
+                    margin: '0.25rem 0 0 0',
+                    fontSize: '0.8rem',
+                    color: '#6c757d'
+                  }}>
+                    {action.description}
+                  </p>
+                  
+                  {action.type === 'modify' && selectedAction === 'modify' && (
+                    <div style={{ marginTop: '0.5rem' }}>
+                      <input
+                        type="text"
+                        placeholder="Enter new value..."
+                        value={modifyValue}
+                        onChange={(e) => setModifyValue(e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: '0.375rem 0.5rem',
+                          fontSize: '0.8rem',
+                          border: '1px solid #ced4da',
+                          borderRadius: '3px'
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                  )}
+                  
+                  {action.affectedFields.length > 0 && (
+                    <div style={{ marginTop: '0.5rem' }}>
+                      <span style={{ fontSize: '0.75rem', color: '#6c757d' }}>
+                        Will affect: {action.affectedFields.join(', ')}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        {/* Resolve Button */}
+        <div style={{ 
+          marginTop: '1rem',
+          display: 'flex',
+          justifyContent: 'flex-end',
+          gap: '0.5rem'
+        }}>
+          <button
+            onClick={() => {
+              if (selectedAction) {
+                handleResolve(selectedAction);
+              }
+            }}
+            disabled={!selectedAction || (selectedAction === 'modify' && !modifyValue.trim())}
+            style={{
+              padding: '0.5rem 1rem',
+              fontSize: '0.85rem',
+              backgroundColor: selectedAction ? '#007bff' : '#6c757d',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: selectedAction && (selectedAction !== 'modify' || modifyValue.trim()) ? 'pointer' : 'not-allowed',
+              opacity: selectedAction && (selectedAction !== 'modify' || modifyValue.trim()) ? 1 : 0.6
+            }}
+            data-testid={`resolve-conflict-${conflict.id}`}
+          >
+            Resolve Conflict
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

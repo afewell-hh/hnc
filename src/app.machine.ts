@@ -215,7 +215,10 @@ export const fabricDesignMachine = createMachine({
     ruleEvaluationResult: null,
     issues: [],
     fieldOverrides: [],
-    rulesEngineEnabled: true
+    rulesEngineEnabled: true,
+    importProgress: { status: 'idle' },
+    importConflicts: [],
+    importedSpec: null
   } as FabricDesignContext,
   types: {} as {
     context: FabricDesignContext
@@ -488,9 +491,45 @@ export const fabricDesignMachine = createMachine({
           })
         }
       }
+    },
+    importing: {
+      invoke: {
+        src: 'importFabric',
+        input: ({ context }) => ({ fabricSpec: context.importedSpec }),
+        onDone: {
+          target: 'configuring',
+          actions: assign({
+            config: ({ event }) => event.output.config,
+            importProgress: { status: 'success', message: 'Fabric imported successfully' },
+            issues: ({ context, event }) => {
+              if (!context.rulesEngineEnabled) return []
+              
+              const rulesEngine = new RulesEngine()
+              return rulesEngine.analyzeConfiguration(event.output.config, context.computedTopology, context.fieldOverrides)
+            }
+          })
+        },
+        onError: {
+          target: 'configuring',
+          actions: assign({
+            importProgress: ({ event }) => ({
+              status: 'error',
+              message: (event.error as Error)?.message || 'Import failed'
+            })
+          })
+        }
+      }
     }
   },
   on: {
+    // Import events (WP-IMP3)
+    START_IMPORT: {
+      target: '.importing',
+      actions: assign({
+        importedSpec: ({ event }) => event.fabricSpec,
+        importProgress: { status: 'importing', message: 'Processing import...' }
+      })
+    },
     // Global events for override management
     OVERRIDE_ISSUE: {
       actions: assign({
@@ -543,6 +582,105 @@ export const fabricDesignMachine = createMachine({
           return rulesEngine.analyzeConfiguration(context.config, context.computedTopology, updatedOverrides)
         }
       })
+    },
+    // Import conflict resolution events (WP-IMP2)
+    IMPORT_SPEC: {
+      actions: assign({
+        importedSpec: ({ event }) => {
+          const { fabricSpec } = event as { fabricSpec: FabricSpec }
+          return fabricSpec
+        },
+        importConflicts: ({ context, event }) => {
+          const { fabricSpec } = event as { fabricSpec: FabricSpec }
+          
+          if (!context.computedTopology) {
+            console.warn('Cannot detect import conflicts without computed topology')
+            return []
+          }
+          
+          // Import and use the conflict resolver
+          const { ImportConflictResolver } = require('./domain/import-conflict-resolver')
+          const resolver = new ImportConflictResolver()
+          
+          const result = resolver.detectConflicts(fabricSpec, context.computedTopology, context.config)
+          return result.conflicts
+        }
+      })
+    },
+    RESOLVE_IMPORT_CONFLICT: {
+      actions: assign({
+        config: ({ context, event }) => {
+          const { conflictId, actionType, modifyValue } = event as { 
+            conflictId: string; 
+            actionType: 'accept' | 'reject' | 'modify'; 
+            modifyValue?: any 
+          }
+          
+          const conflict = context.importConflicts.find(c => c.id === conflictId)
+          if (!conflict) {
+            console.warn(`Import conflict ${conflictId} not found`)
+            return context.config
+          }
+          
+          const { ImportConflictResolver } = require('./domain/import-conflict-resolver')
+          const resolver = new ImportConflictResolver()
+          
+          try {
+            const resolution = resolver.resolveConflict(conflict, actionType, modifyValue)
+            return { ...context.config, ...resolution.updatedSpec }
+          } catch (error) {
+            console.error('Failed to resolve import conflict:', error)
+            return context.config
+          }
+        },
+        importConflicts: ({ context, event }) => {
+          const { conflictId, actionType, modifyValue } = event as { 
+            conflictId: string; 
+            actionType: 'accept' | 'reject' | 'modify'; 
+            modifyValue?: any 
+          }
+          
+          const conflict = context.importConflicts.find(c => c.id === conflictId)
+          if (!conflict) {
+            return context.importConflicts
+          }
+          
+          const { ImportConflictResolver } = require('./domain/import-conflict-resolver')
+          const resolver = new ImportConflictResolver()
+          
+          try {
+            const resolution = resolver.resolveConflict(conflict, actionType, modifyValue)
+            
+            return context.importConflicts.map(c => 
+              c.id === conflictId ? resolution.resolvedConflict : c
+            )
+          } catch (error) {
+            console.error('Failed to resolve import conflict:', error)
+            return context.importConflicts
+          }
+        }
+      })
+    },
+    DETECT_IMPORT_CONFLICTS: {
+      actions: assign({
+        importConflicts: ({ context }) => {
+          if (!context.importedSpec || !context.computedTopology) {
+            return []
+          }
+          
+          const { ImportConflictResolver } = require('./domain/import-conflict-resolver')
+          const resolver = new ImportConflictResolver()
+          
+          const result = resolver.detectConflicts(context.importedSpec, context.computedTopology, context.config)
+          return result.conflicts
+        }
+      })
+    },
+    CLEAR_IMPORT_CONFLICTS: {
+      actions: assign({
+        importConflicts: [],
+        importedSpec: null
+      })
     }
   }
 }).provide({
@@ -583,6 +721,38 @@ export const fabricDesignMachine = createMachine({
       })
       
       return { success: true }
+    }),
+    importFabric: fromPromise(async ({ input }: { input: { fabricSpec: FabricSpec | null } }) => {
+      // Simulate async import processing
+      await new Promise(resolve => setTimeout(resolve, 150))
+      
+      if (!input.fabricSpec) {
+        throw new Error('No fabric specification provided for import')
+      }
+      
+      // Validate fabric specification structure
+      const spec = input.fabricSpec
+      if (!spec.name || !spec.spineModelId || !spec.leafModelId) {
+        throw new Error('Invalid fabric specification: missing required fields')
+      }
+      
+      // In a real implementation, this would:
+      // 1. Validate the imported spec against schema
+      // 2. Check for conflicts with current config
+      // 3. Apply any necessary transformations
+      // 4. Update provenance tracking
+      
+      console.log('Importing fabric specification:', spec)
+      
+      return {
+        config: {
+          ...spec,
+          // Ensure we have default values for backward compatibility
+          uplinksPerLeaf: spec.uplinksPerLeaf || 2,
+          endpointProfile: spec.endpointProfile || { name: 'Standard Server', portsPerEndpoint: 2 },
+          endpointCount: spec.endpointCount || 48
+        }
+      }
     })
   }
 })

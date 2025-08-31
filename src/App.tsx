@@ -4,25 +4,31 @@ import { workspaceMachine } from './workspace.machine'
 import { FabricList } from './FabricList'
 import { ErrorBoundary } from './ui/ErrorBoundary'
 import { FabricDesignerView } from './components/FabricDesignerView'
+import { UserModeProvider } from './contexts/UserModeContext'
+import { ModeToggle } from './components/ModeToggle'
 
 function FabricDesigner({ fabricId, onBackToList }: { fabricId: string; onBackToList: () => void }) {
   return (
     <div style={{ padding: '1rem', maxWidth: '100%', margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <h1>HNC Fabric Designer v0.4</h1>
-        <button
-          onClick={onBackToList}
-          style={{
-            padding: '0.5rem 1rem',
-            backgroundColor: '#757575',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}
-        >
-          ← Back to List
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <ModeToggle />
+          <button
+            onClick={onBackToList}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: '#757575',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+            data-testid="back-to-list-button"
+          >
+            ← Back to List
+          </button>
+        </div>
       </div>
       
       {/* New Issues-Panel based Fabric Designer */}
@@ -33,7 +39,7 @@ function FabricDesigner({ fabricId, onBackToList }: { fabricId: string; onBackTo
   )
 }
 
-function App() {
+function AppContent() {
   const [workspaceState, workspaceSend] = useMachine(workspaceMachine)
 
   const handleCreateFabric = (name: string) => {
@@ -84,6 +90,14 @@ function App() {
       errors={workspaceState.context.errors}
       isCreating={workspaceState.matches('creating')}
     />
+  )
+}
+
+function App() {
+  return (
+    <UserModeProvider defaultMode="guided">
+      <AppContent />
+    </UserModeProvider>
   )
 }
 

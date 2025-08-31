@@ -1,5 +1,6 @@
 import React from 'react';
 import type { FieldOverride } from '../app.types';
+import { useUserMode } from '../contexts/UserModeContext';
 
 interface OverrideChipProps {
   fieldPath: string;
@@ -8,6 +9,7 @@ interface OverrideChipProps {
   size?: 'small' | 'medium';
   variant?: 'inline' | 'tooltip';
   className?: string;
+  forceVisible?: boolean; // Override user mode settings
 }
 
 export function OverrideChip({ 
@@ -16,13 +18,20 @@ export function OverrideChip({
   onClearOverride,
   size = 'small',
   variant = 'inline',
-  className
+  className,
+  forceVisible = false
 }: OverrideChipProps) {
   const [showTooltip, setShowTooltip] = React.useState(false);
+  const { isExpert } = useUserMode();
   
   const override = fieldOverrides.find(o => o.fieldPath === fieldPath);
   
   if (!override) {
+    return null;
+  }
+  
+  // Only show override chips in expert mode (unless forceVisible is true)
+  if (!forceVisible && !isExpert) {
     return null;
   }
 
@@ -247,6 +256,7 @@ interface FieldWithOverrideProps {
   onClearOverride?: (fieldPath: string) => void;
   children: React.ReactNode;
   labelPosition?: 'inline' | 'above';
+  forceVisible?: boolean; // Override user mode settings
 }
 
 export function FieldWithOverride({
@@ -254,7 +264,8 @@ export function FieldWithOverride({
   fieldOverrides,
   onClearOverride,
   children,
-  labelPosition = 'inline'
+  labelPosition = 'inline',
+  forceVisible = false
 }: FieldWithOverrideProps) {
   const override = fieldOverrides.find(o => o.fieldPath === fieldPath);
   
@@ -266,6 +277,7 @@ export function FieldWithOverride({
     <div 
       className="field-with-override"
       style={{ position: 'relative' }}
+      data-testid={`field-with-override-${fieldPath.replace(/\./g, '-')}`}
     >
       {children}
       <div 
@@ -281,6 +293,7 @@ export function FieldWithOverride({
           onClearOverride={onClearOverride}
           variant="tooltip"
           size="small"
+          forceVisible={forceVisible}
         />
       </div>
     </div>
