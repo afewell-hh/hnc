@@ -1,0 +1,237 @@
+{
+  "apiVersion": "apiextensions.k8s.io/v1",
+  "kind": "CustomResourceDefinition",
+  "metadata": {
+    "annotations": {
+      "controller-gen.kubebuilder.io/version": "v0.17.2"
+    },
+    "name": "switches.wiring.githedgehog.com"
+  },
+  "spec": {
+    "group": "wiring.githedgehog.com",
+    "names": {
+      "categories": [
+        "hedgehog",
+        "wiring",
+        "fabric"
+      ],
+      "kind": "Switch",
+      "listKind": "SwitchList",
+      "plural": "switches",
+      "shortNames": [
+        "sw"
+      ],
+      "singular": "switch"
+    },
+    "scope": "Namespaced",
+    "versions": [
+      {
+        "additionalPrinterColumns": [
+          {
+            "jsonPath": ".spec.profile",
+            "name": "Profile",
+            "type": "string"
+          },
+          {
+            "jsonPath": ".spec.role",
+            "name": "Role",
+            "type": "string"
+          },
+          {
+            "jsonPath": ".spec.description",
+            "name": "Descr",
+            "type": "string"
+          },
+          {
+            "jsonPath": ".spec.groups",
+            "name": "Groups",
+            "type": "string"
+          },
+          {
+            "jsonPath": ".spec.redundancy",
+            "name": "Redundancy",
+            "priority": 1,
+            "type": "string"
+          },
+          {
+            "jsonPath": ".spec.boot",
+            "name": "Boot",
+            "priority": 1,
+            "type": "string"
+          },
+          {
+            "jsonPath": ".metadata.creationTimestamp",
+            "name": "Age",
+            "type": "date"
+          }
+        ],
+        "name": "v1beta1",
+        "schema": {
+          "openAPIV3Schema": {
+            "description": "Switch is the Schema for the switches API",
+            "properties": {
+              "apiVersion": {
+                "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+                "type": "string"
+              },
+              "kind": {
+                "description": "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+                "type": "string"
+              },
+              "metadata": {
+                "type": "object"
+              },
+              "spec": {
+                "description": "Spec is desired state of the switch",
+                "properties": {
+                  "asn": {
+                    "description": "ASN is the ASN of the switch",
+                    "format": "int32",
+                    "type": "integer"
+                  },
+                  "boot": {
+                    "description": "Boot is the boot/provisioning information of the switch",
+                    "properties": {
+                      "mac": {
+                        "description": "Identify switch by MAC address of the management port",
+                        "type": "string"
+                      },
+                      "serial": {
+                        "description": "Identify switch by serial number",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "description": {
+                    "description": "Description is a description of the switch",
+                    "type": "string"
+                  },
+                  "ecmp": {
+                    "description": "ECMP is the ECMP configuration for the switch",
+                    "properties": {
+                      "roceQPN": {
+                        "description": "RoCEQPN is a flag to enable RoCE QPN hashing",
+                        "type": "boolean"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "enableAllPorts": {
+                    "description": "EnableAllPorts is a flag to enable all ports on the switch regardless of them being used or not",
+                    "type": "boolean"
+                  },
+                  "groups": {
+                    "description": "Groups is a list of switch groups the switch belongs to",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "ip": {
+                    "description": "IP is the IP of the switch that could be used to access it from other switches and control nodes in the Fabric",
+                    "type": "string"
+                  },
+                  "portAutoNegs": {
+                    "additionalProperties": {
+                      "type": "boolean"
+                    },
+                    "description": "PortAutoNegs is a map of port auto negotiation, key is the port name, value is true or false",
+                    "type": "object"
+                  },
+                  "portBreakouts": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "PortBreakouts is a map of port breakouts, key is the port name, value is the breakout configuration, such as \"1/55: 4x25G\"",
+                    "type": "object"
+                  },
+                  "portGroupSpeeds": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "PortGroupSpeeds is a map of port group speeds, key is the port group name, value is the speed, such as '\"2\": 10G'",
+                    "type": "object"
+                  },
+                  "portSpeeds": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "PortSpeeds is a map of port speeds, key is the port name, value is the speed",
+                    "type": "object"
+                  },
+                  "profile": {
+                    "description": "Profile is the profile of the switch, name of the SwitchProfile object to be used for this switch, currently not used by the Fabric",
+                    "type": "string"
+                  },
+                  "protocolIP": {
+                    "description": "ProtocolIP is used as BGP Router ID for switch configuration",
+                    "type": "string"
+                  },
+                  "redundancy": {
+                    "description": "Redundancy is the switch redundancy configuration including name of the redundancy group switch belongs to and its type, used both for MCLAG and ESLAG connections",
+                    "properties": {
+                      "group": {
+                        "description": "Group is the name of the redundancy group switch belongs to",
+                        "type": "string"
+                      },
+                      "type": {
+                        "description": "Type is the type of the redundancy group, could be mclag or eslag",
+                        "enum": [
+                          "mclag",
+                          "eslag"
+                        ],
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "roce": {
+                    "description": "RoCE is a flag to enable RoCEv2 support on the switch which includes lossless queues and QoS configuration",
+                    "type": "boolean"
+                  },
+                  "role": {
+                    "description": "Role is the role of the switch, could be spine, server-leaf or border-leaf or mixed-leaf",
+                    "enum": [
+                      "spine",
+                      "server-leaf",
+                      "border-leaf",
+                      "mixed-leaf",
+                      "virtual-edge"
+                    ],
+                    "type": "string"
+                  },
+                  "vlanNamespaces": {
+                    "description": "VLANNamespaces is a list of VLAN namespaces the switch is part of, their VLAN ranges could not overlap",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "vtepIP": {
+                    "description": "VTEPIP is the VTEP IP of the switch",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "role"
+                ],
+                "type": "object"
+              },
+              "status": {
+                "description": "Status is the observed state of the switch",
+                "type": "object"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "served": true,
+        "storage": true,
+        "subresources": {
+          "status": {}
+        }
+      }
+    ]
+  }
+}

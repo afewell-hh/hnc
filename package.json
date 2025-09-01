@@ -35,7 +35,14 @@
     "build-storybook": "storybook build --test",
     "serve-storybook": "http-server storybook-static -p 6006 -c-1",
     "test-storybook": "start-server-and-test serve-storybook http://localhost:6006 \"test-storybook --index-json --url http://localhost:6006 --maxWorkers=1 --verbose\"",
-    "pr:fgd": "tsx scripts/pr-fgd.mjs"
+    "pr:fgd": "tsx scripts/pr-fgd.mjs",
+    "upstream:sync": "node tools/upstream-sync.mjs sync",
+    "upstream:status": "node tools/upstream-sync.mjs status",
+    "upstream:sync:verbose": "node tools/upstream-sync.mjs sync --verbose",
+    "upstream:sync:dry-run": "node tools/upstream-sync.mjs sync --dry-run",
+    "upstream:extract": "node tools/upstream-extract.mjs",
+    "upstream:extract:verbose": "node tools/upstream-extract.mjs --verbose",
+    "upstream:extract:dry-run": "node tools/upstream-extract.mjs --dry-run"
   },
   "dependencies": {
     "@isomorphic-git/lightning-fs": "^4.6.2",

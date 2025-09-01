@@ -1,0 +1,119 @@
+{
+  "apiVersion": "apiextensions.k8s.io/v1",
+  "kind": "CustomResourceDefinition",
+  "metadata": {
+    "annotations": {
+      "controller-gen.kubebuilder.io/version": "v0.17.2"
+    },
+    "name": "fabnodes.fabricator.githedgehog.com"
+  },
+  "spec": {
+    "group": "fabricator.githedgehog.com",
+    "names": {
+      "categories": [
+        "hedgehog",
+        "fabricator"
+      ],
+      "kind": "FabNode",
+      "listKind": "FabNodeList",
+      "plural": "fabnodes",
+      "shortNames": [
+        "fn"
+      ],
+      "singular": "fabnode"
+    },
+    "scope": "Namespaced",
+    "versions": [
+      {
+        "additionalPrinterColumns": [
+          {
+            "jsonPath": ".spec.roles",
+            "name": "Roles",
+            "type": "string"
+          },
+          {
+            "jsonPath": ".spec.management.ip",
+            "name": "MgmtIP",
+            "type": "string"
+          },
+          {
+            "jsonPath": ".metadata.creationTimestamp",
+            "name": "Age",
+            "type": "date"
+          }
+        ],
+        "name": "v1beta1",
+        "schema": {
+          "openAPIV3Schema": {
+            "description": "FabNode is the Schema for the nodes API.",
+            "properties": {
+              "apiVersion": {
+                "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+                "type": "string"
+              },
+              "kind": {
+                "description": "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+                "type": "string"
+              },
+              "metadata": {
+                "type": "object"
+              },
+              "spec": {
+                "description": "FabNodeSpec defines the desired state of FabNode.",
+                "properties": {
+                  "bootstrap": {
+                    "properties": {
+                      "disk": {
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "dummy": {
+                    "properties": {
+                      "ip": {
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "management": {
+                    "properties": {
+                      "interface": {
+                        "type": "string"
+                      },
+                      "ip": {
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "roles": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "roles"
+                ],
+                "type": "object"
+              },
+              "status": {
+                "description": "FabNodeStatus defines the observed state of Node.",
+                "type": "object"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "served": true,
+        "storage": true,
+        "subresources": {
+          "status": {}
+        }
+      }
+    ]
+  }
+}

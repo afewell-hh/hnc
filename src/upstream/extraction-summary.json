@@ -1,0 +1,24 @@
+{
+  "extracted_at": "2025-09-01T00:16:39.682Z",
+  "stats": {
+    "total_crds": 20,
+    "priority_crds": 11,
+    "switch_profiles": 1,
+    "examples": 0,
+    "relevant_examples": 0
+  },
+  "priority_crds": [
+    "connections.wiring.githedgehog.com",
+    "switches.wiring.githedgehog.com",
+    "switchprofiles.wiring.githedgehog.com",
+    "servers.wiring.githedgehog.com",
+    "serverprofiles.wiring.githedgehog.com",
+    "vpcs.vpc.githedgehog.com",
+    "vpcattachments.vpc.githedgehog.com",
+    "vpcpeerings.vpc.githedgehog.com",
+    "externals.vpc.githedgehog.com",
+    "externalattachments.vpc.githedgehog.com",
+    "externalpeerings.vpc.githedgehog.com"
+  ],
+  "generated_types": true
+}

@@ -1,0 +1,101 @@
+{
+  "apiVersion": "apiextensions.k8s.io/v1",
+  "kind": "CustomResourceDefinition",
+  "metadata": {
+    "annotations": {
+      "controller-gen.kubebuilder.io/version": "v0.17.2"
+    },
+    "name": "externals.vpc.githedgehog.com"
+  },
+  "spec": {
+    "group": "vpc.githedgehog.com",
+    "names": {
+      "categories": [
+        "hedgehog",
+        "fabric",
+        "external"
+      ],
+      "kind": "External",
+      "listKind": "ExternalList",
+      "plural": "externals",
+      "shortNames": [
+        "ext"
+      ],
+      "singular": "external"
+    },
+    "scope": "Namespaced",
+    "versions": [
+      {
+        "additionalPrinterColumns": [
+          {
+            "jsonPath": ".spec.ipv4Namespace",
+            "name": "IPv4NS",
+            "type": "string"
+          },
+          {
+            "jsonPath": ".spec.inboundCommunity",
+            "name": "InComm",
+            "type": "string"
+          },
+          {
+            "jsonPath": ".spec.outboundCommunity",
+            "name": "OutComm",
+            "type": "string"
+          },
+          {
+            "jsonPath": ".metadata.creationTimestamp",
+            "name": "Age",
+            "type": "date"
+          }
+        ],
+        "name": "v1beta1",
+        "schema": {
+          "openAPIV3Schema": {
+            "description": "External object represents an external system connected to the Fabric and available to the specific IPv4Namespace.\nUsers can do external peering with the external system by specifying the name of the External Object without need to\nworry about the details of how external system is attached to the Fabric.",
+            "properties": {
+              "apiVersion": {
+                "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+                "type": "string"
+              },
+              "kind": {
+                "description": "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+                "type": "string"
+              },
+              "metadata": {
+                "type": "object"
+              },
+              "spec": {
+                "description": "Spec is the desired state of the External",
+                "properties": {
+                  "inboundCommunity": {
+                    "description": "InboundCommunity is the inbound community to filter routes from the external system (e.g. 65102:5000)",
+                    "type": "string"
+                  },
+                  "ipv4Namespace": {
+                    "description": "IPv4Namespace is the name of the IPv4Namespace this External belongs to",
+                    "type": "string"
+                  },
+                  "outboundCommunity": {
+                    "description": "OutboundCommunity is theoutbound community that all outbound routes will be stamped with (e.g. 50000:50001)",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "status": {
+                "description": "Status is the observed state of the External",
+                "type": "object"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "served": true,
+        "storage": true,
+        "subresources": {
+          "status": {}
+        }
+      }
+    ]
+  }
+}
