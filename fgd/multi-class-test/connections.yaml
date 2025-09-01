@@ -71,5 +71,5 @@ connections:
     type: uplink
 metadata:
   fabricName: multi-class-fabric
-  generatedAt: "2025-08-31T21:47:14.734Z"
+  generatedAt: "2025-09-01T06:56:44.744Z"
   totalConnections: 10

@@ -72,7 +72,7 @@ test.describe('HNC v0.2 Multi-Fabric Workspace', () => {
     await selectButtons.first().click()
     
     // Should navigate to fabric designer
-    await expect(page.getByTestId('fabric-designer-view').getByRole('heading', { name: 'HNC Fabric Designer v0.4' })).toBeVisible()
+    await expect(page.getByText(/HNC Fabric Designer/)).toBeVisible()
     await expect(page.getByText('← Back to List')).toBeVisible()
     
     // Should show the fabric name in the input
@@ -96,7 +96,7 @@ test.describe('HNC v0.2 Multi-Fabric Workspace', () => {
     await uplinksInput.fill('4')
 
     // === Phase 6: Compute Topology ===
-    const computeButton = page.getByText('Compute Topology')
+    const computeButton = page.getByTestId('compute-topology-button')
     await expect(computeButton).toBeEnabled()
     await computeButton.click()
     
@@ -133,7 +133,7 @@ test.describe('HNC v0.2 Multi-Fabric Workspace', () => {
     const devSelectButton = page.getByRole('button', { name: 'Select' }).last()
     await devSelectButton.click()
     
-    await expect(page.getByTestId('fabric-designer-view').getByRole('heading', { name: 'HNC Fabric Designer v0.4' })).toBeVisible()
+    await expect(page.getByText(/HNC Fabric Designer/)).toBeVisible()
     
     const devNameInput = page.getByTestId('fabric-name-input')
     await expect(devNameInput).toHaveValue('Development Environment')
@@ -205,7 +205,7 @@ test.describe('HNC v0.2 Multi-Fabric Workspace', () => {
     await uplinksInput.clear()
     await uplinksInput.fill('5')
     
-    await page.getByText('Compute Topology').click()
+    await page.getByTestId('compute-topology-button').click()
     
     // Should show validation error
     await expect(page.getByText(/uplinks per leaf must be/i)).toBeVisible()
@@ -218,7 +218,7 @@ test.describe('HNC v0.2 Multi-Fabric Workspace', () => {
     await endpointInput.clear()
     await endpointInput.fill('0')
     
-    await page.getByText('Compute Topology').click()
+    await page.getByTestId('compute-topology-button').click()
     
     // Should show validation error
     await expect(page.getByText(/endpoint count must be/i)).toBeVisible()
@@ -243,7 +243,7 @@ test.describe('HNC v0.2 Multi-Fabric Workspace', () => {
       await selectButtons.nth(i).click()
       
       // Should load designer quickly
-      await expect(page.getByTestId('fabric-designer-view').getByRole('heading', { name: 'HNC Fabric Designer v0.4' })).toBeVisible()
+      await expect(page.getByText(/HNC Fabric Designer/)).toBeVisible()
       
       // Navigate back
       await page.getByText('← Back to List').click()

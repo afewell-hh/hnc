@@ -150,3 +150,178 @@ export function calculateCapacityImpact(
     percentageIncrease
   }
 }
+
+/**
+ * Generates deterministic child port names for breakout configurations
+ * Uses whole-group allocation (4 ports per breakout group)
+ */
+export function generateBreakoutPortNames(
+  basePort: string,
+  breakoutType: string = '4x25G'
+): string[] {
+  const childPorts: string[] = []
+  const multiplier = breakoutType.startsWith('4x') ? 4 : 1
+  
+  // Parse base port format (e.g., "E1/48" -> slot=1, port=48)
+  const ethernetMatch = basePort.match(/^E(\d+)\/(\d+)$/)
+  if (ethernetMatch) {
+    const [, slot, portNum] = ethernetMatch
+    const portNumber = parseInt(portNum, 10)
+    
+    // Generate child ports using deterministic naming scheme
+    for (let i = 1; i <= multiplier; i++) {
+      // Use format: Ethernet{portNum}/0/{child} for breakout ports
+      childPorts.push(`Ethernet${portNumber}/0/${i}`)
+    }
+  } else {
+    // Try alternative format "Ethernet{N}"
+    const ethernetAltMatch = basePort.match(/^Ethernet(\d+)$/)
+    if (ethernetAltMatch) {
+      const [, portNum] = ethernetAltMatch
+      const portNumber = parseInt(portNum, 10)
+      
+      for (let i = 1; i <= multiplier; i++) {
+        childPorts.push(`Ethernet${portNumber}/0/${i}`)
+      }
+    } else {
+      // Fallback for unrecognized formats
+      for (let i = 1; i <= multiplier; i++) {
+        childPorts.push(`${basePort}/0/${i}`)
+      }
+    }
+  }
+  
+  return childPorts
+}
+
+/**
+ * Allocates breakout ports in whole groups (4-port groups)
+ * Ensures deterministic allocation for consistent wiring generation
+ */
+export function allocateBreakoutGroups(
+  availablePorts: string[],
+  requiredGroups: number,
+  breakoutType: string = '4x25G'
+): {
+  allocatedGroups: Array<{
+    basePort: string
+    childPorts: string[]
+    groupId: number
+  }>
+  remainingPorts: string[]
+  warnings: string[]
+} {
+  const groupSize = breakoutType.startsWith('4x') ? 4 : 1
+  const allocatedGroups: Array<{
+    basePort: string
+    childPorts: string[]
+    groupId: number
+  }> = []
+  const warnings: string[] = []
+  const usedPorts = new Set<string>()
+  
+  // Sort ports for deterministic allocation
+  const sortedPorts = [...availablePorts].sort()
+  
+  if (requiredGroups > sortedPorts.length) {
+    warnings.push(`Requested ${requiredGroups} breakout groups but only ${sortedPorts.length} ports available`)
+  }
+  
+  // Allocate whole groups only
+  let groupId = 1
+  for (let i = 0; i < Math.min(requiredGroups, sortedPorts.length); i++) {
+    const basePort = sortedPorts[i]
+    if (usedPorts.has(basePort)) continue
+    
+    const childPorts = generateBreakoutPortNames(basePort, breakoutType)
+    
+    allocatedGroups.push({
+      basePort,
+      childPorts,
+      groupId: groupId++
+    })
+    
+    usedPorts.add(basePort)
+  }
+  
+  const remainingPorts = sortedPorts.filter(port => !usedPorts.has(port))
+  
+  return {
+    allocatedGroups,
+    remainingPorts,
+    warnings
+  }
+}
+
+/**
+ * Validates breakout port allocation for mixed-mode detection
+ */
+export function validateBreakoutAllocation(
+  breakoutGroups: Array<{ basePort: string; childPorts: string[] }>,
+  regularPorts: string[],
+  allowMixedMode: boolean = false
+): {
+  isValid: boolean
+  warnings: string[]
+  errors: string[]
+  hasMixedAllocation: boolean
+} {
+  const warnings: string[] = []
+  const errors: string[] = []
+  const hasBreakoutPorts = breakoutGroups.length > 0
+  const hasRegularPorts = regularPorts.length > 0
+  const hasMixedAllocation = hasBreakoutPorts && hasRegularPorts
+  
+  if (hasMixedAllocation && !allowMixedMode) {
+    warnings.push(
+      'Mixed port allocation detected: Some ports use breakouts while others use regular allocation. ' +
+      'This may cause capacity imbalances and wiring complexity.'
+    )
+  }
+  
+  // Check for port conflicts
+  const allBasePorts = breakoutGroups.map(g => g.basePort)
+  const allChildPorts = breakoutGroups.flatMap(g => g.childPorts)
+  const duplicateBasePorts = findDuplicates(allBasePorts)
+  const duplicateChildPorts = findDuplicates(allChildPorts)
+  
+  if (duplicateBasePorts.length > 0) {
+    errors.push(`Duplicate base ports in breakout allocation: ${duplicateBasePorts.join(', ')}`)
+  }
+  
+  if (duplicateChildPorts.length > 0) {
+    errors.push(`Duplicate child ports in breakout allocation: ${duplicateChildPorts.join(', ')}`)
+  }
+  
+  // Check for overlapping port names between regular and breakout
+  const regularPortSet = new Set(regularPorts)
+  const conflictingPorts = allBasePorts.filter(port => regularPortSet.has(port))
+  
+  if (conflictingPorts.length > 0) {
+    errors.push(`Port conflicts between regular and breakout allocation: ${conflictingPorts.join(', ')}`)
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    warnings,
+    errors,
+    hasMixedAllocation
+  }
+}
+
+/**
+ * Helper function to find duplicate values in an array
+ */
+function findDuplicates(arr: string[]): string[] {
+  const seen = new Set<string>()
+  const duplicates = new Set<string>()
+  
+  for (const item of arr) {
+    if (seen.has(item)) {
+      duplicates.add(item)
+    }
+    seen.add(item)
+  }
+  
+  return Array.from(duplicates)
+}

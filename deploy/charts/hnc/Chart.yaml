@@ -1,17 +1,29 @@
 apiVersion: v2
 name: hnc
-description: HNC (Hybrid Network Calculator) - Network fabric configuration and deployment tool
-version: 0.5.0-alpha
-appVersion: "0.5.0-alpha"
+description: HNC (Hybrid Network Calculator) - Network fabric configuration and deployment tool for HOSS ops cluster
+version: 0.4.0-alpha
+appVersion: "0.4.0-alpha"
 type: application
 keywords:
   - networking
   - fabric
   - configuration
   - calculator
-home: https://github.com/your-org/hnc
+  - hedgehog
+  - hoss
+  - ops-cluster
+home: https://github.com/afewell/hnc
 sources:
-  - https://github.com/your-org/hnc
+  - https://github.com/afewell/hnc
 maintainers:
   - name: HNC Team
-    email: team@example.com
+    email: team@hedgehog-fabric.com
+dependencies: []
+engine: gotpl
+kubeVersion: ">=1.19.0"
+annotations:
+  category: NetworkingTools
+  licenses: Apache-2.0
+  images: |
+    - name: hnc
+      image: ghcr.io/afewell/hnc:0.4.0-alpha

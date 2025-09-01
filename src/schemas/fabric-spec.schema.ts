@@ -59,6 +59,7 @@ export const LeafClassSchema = z.object({
   
   lag: LAGConstraintsSchema,
   count: z.number().int().min(1).max(100).optional(),
+  breakoutEnabled: z.boolean().optional(), // Port breakout support
   metadata: z.record(z.string(), z.any()).optional(),
 });
 
@@ -96,6 +97,7 @@ export const FabricSpecSchema = z.object({
   endpointCount: z.number().int().min(1).max(10000).optional(),
   
   // Common fields
+  breakoutEnabled: z.boolean().optional(), // Global port breakout support
   metadata: z.record(z.string(), z.any()).optional(),
   version: z.string().default('1.0.0'),
   createdAt: z.date().default(() => new Date()),

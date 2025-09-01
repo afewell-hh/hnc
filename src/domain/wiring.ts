@@ -1,9 +1,11 @@
 /**
  * Port-Accurate Wiring Domain - HNC v0.4
  * Converts allocation results into deterministic wiring diagrams with YAML output
+ * Supports breakout port allocation and deterministic child port naming
  */
 
 import { expandPortRanges } from './portUtils';
+import { generateBreakoutPortNames, allocateBreakoutGroups } from '../utils/breakout-utils';
 import type { 
   FabricSpec,
   EndpointProfile,
@@ -168,7 +170,8 @@ function buildSingleClassWiring(
       spec.endpointCount,
       'default',
       leafProfile,
-      spec.uplinksPerLeaf || 0
+      spec.uplinksPerLeaf || 0,
+      spec.breakoutEnabled || false
     );
   }
 
@@ -266,7 +269,8 @@ function buildMultiClassWiring(
           endpointProfile.count,
           leafClass.id,
           leafProfile,
-          leafClass.uplinksPerLeaf
+          leafClass.uplinksPerLeaf,
+          leafClass.breakoutEnabled || false
         );
       }
     }
@@ -286,7 +290,7 @@ function buildMultiClassWiring(
 }
 
 /**
- * Creates server devices and endpoint connections
+ * Creates server devices and endpoint connections with breakout support
  */
 function createServersAndConnections(
   devices: { spines: WiringDevice[]; leaves: WiringDevice[]; servers: WiringDevice[] },
@@ -295,10 +299,35 @@ function createServersAndConnections(
   endpointCount: number,
   classId: string,
   leafProfile: SwitchProfile,
-  uplinksPerLeaf: number
+  uplinksPerLeaf: number,
+  breakoutEnabled?: boolean
 ) {
   const endpointPorts = expandPortRanges(leafProfile.ports.endpointAssignable);
-  const downlinksPerLeaf = endpointPorts.length - uplinksPerLeaf;
+  const baseDownlinksPerLeaf = endpointPorts.length - uplinksPerLeaf;
+  
+  // Calculate effective capacity with breakout multiplier
+  let availablePorts: string[] = [];
+  let effectivePortsPerLeaf = baseDownlinksPerLeaf;
+  
+  if (breakoutEnabled && leafProfile.profiles.breakout?.supportsBreakout) {
+    // Use breakout allocation - allocate ports in whole groups
+    const multiplier = leafProfile.profiles.breakout.capacityMultiplier || 4;
+    effectivePortsPerLeaf = baseDownlinksPerLeaf * multiplier;
+    
+    // Generate breakout port allocation for each leaf
+    const requiredGroups = Math.ceil(endpointCount / 4); // 4 endpoints per breakout group
+    const { allocatedGroups } = allocateBreakoutGroups(
+      endpointPorts.slice(0, baseDownlinksPerLeaf), 
+      requiredGroups,
+      leafProfile.profiles.breakout.breakoutType || '4x25G'
+    );
+    
+    // Flatten child ports for connection allocation
+    availablePorts = allocatedGroups.flatMap(group => group.childPorts);
+  } else {
+    // Use regular port allocation
+    availablePorts = endpointPorts.slice(0, baseDownlinksPerLeaf);
+  }
   
   let serverIndex = 1;
   let leafIndex = 0;
@@ -316,11 +345,13 @@ function createServersAndConnections(
       classId
     });
 
-    // Connect to leaf
+    // Connect to leaf using appropriate port naming
     const targetLeafId = classId === 'default' 
       ? `leaf-${leafIndex + 1}`
       : `leaf-${classId}-${leafIndex + 1}`;
-    const leafPort = endpointPorts[portIndex % endpointPorts.length];
+    
+    // Use breakout child ports or regular ports
+    const leafPort = availablePorts[portIndex % availablePorts.length];
     
     connections.push({
       id: `link-${serverId}-${targetLeafId}-1`,
@@ -333,7 +364,7 @@ function createServersAndConnections(
     portIndex++;
     
     // Move to next leaf when current is full
-    if (portIndex >= downlinksPerLeaf) {
+    if (portIndex >= effectivePortsPerLeaf) {
       leafIndex++;
       portIndex = 0;
     }

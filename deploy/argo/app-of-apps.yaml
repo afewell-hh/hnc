@@ -3,12 +3,22 @@ kind: Application
 metadata:
   name: hnc-app-of-apps
   namespace: argocd
+  labels:
+    app.kubernetes.io/name: hnc-app-of-apps
+    app.kubernetes.io/component: argocd-application
+    app.kubernetes.io/part-of: hnc
+    app.kubernetes.io/managed-by: argocd
+    environment: ops
+    cluster-type: hoss
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   source:
-    repoURL: https://github.com/your-org/hnc
+    repoURL: https://github.com/afewell/hnc
     targetRevision: HEAD
     path: deploy/argo/apps
   destination:
@@ -18,5 +28,23 @@ spec:
     automated:
       prune: true
       selfHeal: true
+      allowEmpty: false
     syncOptions:
-    - CreateNamespace=true
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+      - RespectIgnoreDifferences=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  revisionHistoryLimit: 3
+  info:
+    - name: Description
+      value: HNC App-of-Apps pattern for HOSS ops cluster
+    - name: Repository
+      value: https://github.com/afewell/hnc
+    - name: Documentation
+      value: https://github.com/afewell/hnc/blob/main/deploy/README.md

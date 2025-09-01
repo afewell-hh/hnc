@@ -16,7 +16,7 @@ async function setupTestHelpers() {
       }
     } catch (e) {
       // Fallback if import fails
-      ;(window as any).__HNC_RESET__ = () => {
+      (window as any).__HNC_RESET__ = () => {
         localStorage.clear()
         sessionStorage.clear()
       }

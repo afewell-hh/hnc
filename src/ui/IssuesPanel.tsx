@@ -1,24 +1,30 @@
 import React from 'react';
 import type { Issue, FieldOverride } from '../app.types';
 import type { ImportConflict, ConflictResolutionAction } from '../domain/import-conflict-resolver';
+import type { ValidationMessage } from '../domain/rules';
 
 interface IssuesPanelProps {
   issues: Issue[];
+  // Enhanced validation messages with actionable feedback
+  validationMessages?: ValidationMessage[];
   fieldOverrides?: FieldOverride[];
   importConflicts?: ImportConflict[];
   onOverrideIssue?: (issueId: string, reason: string) => void;
   onClearOverride?: (fieldPath: string) => void;
   onResolveImportConflict?: (conflictId: string, actionType: 'accept' | 'reject' | 'modify', modifyValue?: any) => void;
+  onFieldClick?: (fieldPath: string) => void; // Navigate to field in UI
   className?: string;
 }
 
 export function IssuesPanel({ 
   issues, 
+  validationMessages = [],
   fieldOverrides = [],
   importConflicts = [],
   onOverrideIssue, 
   onClearOverride,
   onResolveImportConflict,
+  onFieldClick,
   className 
 }: IssuesPanelProps) {
   const [expandedIssues, setExpandedIssues] = React.useState<Set<string>>(new Set());
@@ -97,7 +103,10 @@ export function IssuesPanel({
   };
 
   const groupedIssues = React.useMemo(() => {
-    const groups = issues.reduce((acc, issue) => {
+    // Combine legacy issues and new validation messages
+    const allMessages = [...issues, ...validationMessages.map(vm => convertValidationMessageToIssue(vm))];
+    
+    const groups = allMessages.reduce((acc, issue) => {
       if (!acc[issue.type]) {
         acc[issue.type] = [];
       }
@@ -114,7 +123,22 @@ export function IssuesPanel({
     });
 
     return groups;
-  }, [issues]);
+  }, [issues, validationMessages]);
+  
+  // Convert ValidationMessage to Issue format for display
+  const convertValidationMessageToIssue = (vm: ValidationMessage): Issue & { validationMessage?: ValidationMessage } => {
+    return {
+      id: `validation-${vm.code}-${Date.now()}-${Math.random()}`,
+      type: vm.severity,
+      severity: vm.severity === 'error' ? 'high' : vm.severity === 'warning' ? 'medium' : 'low',
+      title: vm.title,
+      message: vm.message,
+      field: vm.affectedFields[0], // Use first affected field
+      category: 'validation',
+      overridable: vm.severity !== 'error', // Only allow overriding warnings and info
+      validationMessage: vm // Store original for enhanced display
+    };
+  };
 
   const issueCount = issues.length;
   const errorCount = issues.filter(i => i.type === 'error').length;
@@ -399,21 +423,35 @@ export function IssuesPanel({
                       marginTop: '0.5rem'
                     }}
                   >
-                    {/* Field Information */}
-                    {issue.field && (
+                    {/* Enhanced Actionable Information for Validation Messages */}
+                    {(issue as any).validationMessage && (
+                      <EnhancedValidationDisplay 
+                        validationMessage={(issue as any).validationMessage}
+                        onFieldClick={onFieldClick}
+                      />
+                    )}
+
+                    {/* Field Information (legacy) */}
+                    {issue.field && !(issue as any).validationMessage && (
                       <div style={{ marginBottom: '0.75rem' }}>
                         <strong style={{ fontSize: '0.9rem', color: '#495057' }}>
                           Related Field:
                         </strong>
-                        <code style={{ 
-                          marginLeft: '0.5rem',
-                          padding: '0.125rem 0.25rem',
-                          backgroundColor: '#e9ecef',
-                          borderRadius: '3px',
-                          fontSize: '0.8rem'
-                        }}>
+                        <button
+                          onClick={() => onFieldClick?.(issue.field!)}
+                          style={{
+                            marginLeft: '0.5rem',
+                            padding: '0.125rem 0.25rem',
+                            backgroundColor: '#e9ecef',
+                            border: '1px solid #ced4da',
+                            borderRadius: '3px',
+                            fontSize: '0.8rem',
+                            cursor: onFieldClick ? 'pointer' : 'default',
+                            textDecoration: onFieldClick ? 'underline' : 'none'
+                          }}
+                        >
                           {issue.field}
-                        </code>
+                        </button>
                       </div>
                     )}
 
@@ -930,6 +968,215 @@ function ImportConflictItem({ conflict, onResolve }: ImportConflictItemProps) {
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Enhanced display component for actionable validation messages - WP-TOP2
+ */
+interface EnhancedValidationDisplayProps {
+  validationMessage: ValidationMessage;
+  onFieldClick?: (fieldPath: string) => void;
+}
+
+function EnhancedValidationDisplay({ validationMessage, onFieldClick }: EnhancedValidationDisplayProps) {
+  return (
+    <div className="enhanced-validation-display" style={{ marginBottom: '1rem' }}>
+      {/* Remediation Section - The key feature */}
+      <div 
+        className="remediation-section"
+        style={{
+          padding: '1rem',
+          backgroundColor: '#f8f9fa',
+          border: '1px solid #dee2e6',
+          borderLeft: '4px solid #28a745',
+          borderRadius: '4px',
+          marginBottom: '1rem'
+        }}
+      >
+        <h5 style={{ 
+          margin: '0 0 0.75rem 0',
+          color: '#155724',
+          fontSize: '0.9rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem'
+        }}>
+          <span aria-hidden="true">🔧</span>
+          How to Fix This Issue
+        </h5>
+        
+        <div className="remediation-steps">
+          <div className="remediation-step" style={{ marginBottom: '0.5rem' }}>
+            <strong style={{ fontSize: '0.85rem', color: '#155724' }}>What to change:</strong>
+            <p style={{ margin: '0.25rem 0', fontSize: '0.8rem', color: '#155724' }}>
+              {validationMessage.remediation.what}
+            </p>
+          </div>
+          
+          <div className="remediation-step" style={{ marginBottom: '0.5rem' }}>
+            <strong style={{ fontSize: '0.85rem', color: '#155724' }}>How to fix it:</strong>
+            <p style={{ margin: '0.25rem 0', fontSize: '0.8rem', color: '#155724' }}>
+              {validationMessage.remediation.how}
+            </p>
+          </div>
+          
+          <div className="remediation-step">
+            <strong style={{ fontSize: '0.85rem', color: '#155724' }}>Why this is needed:</strong>
+            <p style={{ margin: '0.25rem 0', fontSize: '0.8rem', color: '#155724' }}>
+              {validationMessage.remediation.why}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Affected Fields with Clickable Links */}
+      {validationMessage.affectedFields.length > 0 && (
+        <div className="affected-fields" style={{ marginBottom: '1rem' }}>
+          <h5 style={{ 
+            margin: '0 0 0.5rem 0',
+            color: '#495057',
+            fontSize: '0.9rem'
+          }}>
+            Fields to Update:
+          </h5>
+          <div style={{ 
+            display: 'flex', 
+            flexWrap: 'wrap', 
+            gap: '0.5rem' 
+          }}>
+            {validationMessage.affectedFields.map((fieldPath, index) => (
+              <button
+                key={index}
+                onClick={() => onFieldClick?.(fieldPath)}
+                disabled={!onFieldClick}
+                className="field-link-button"
+                style={{
+                  padding: '0.25rem 0.5rem',
+                  fontSize: '0.75rem',
+                  backgroundColor: onFieldClick ? '#007bff' : '#6c757d',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '12px',
+                  cursor: onFieldClick ? 'pointer' : 'not-allowed',
+                  fontFamily: 'monospace',
+                  transition: 'all 0.2s ease',
+                }}
+                title={onFieldClick ? `Click to navigate to ${fieldPath}` : `Field path: ${fieldPath}`}
+                onMouseOver={(e) => {
+                  if (onFieldClick) {
+                    e.currentTarget.style.backgroundColor = '#0056b3';
+                  }
+                }}
+                onMouseOut={(e) => {
+                  if (onFieldClick) {
+                    e.currentTarget.style.backgroundColor = '#007bff';
+                  }
+                }}
+              >
+                {fieldPath}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Technical Context (Collapsible) */}
+      <details className="technical-context" style={{ marginBottom: '1rem' }}>
+        <summary style={{ 
+          cursor: 'pointer',
+          fontSize: '0.85rem',
+          color: '#6c757d',
+          paddingBottom: '0.5rem'
+        }}>
+          Technical Details
+        </summary>
+        <div style={{ 
+          padding: '0.75rem',
+          backgroundColor: '#f8f9fa',
+          border: '1px solid #e9ecef',
+          borderRadius: '4px',
+          fontSize: '0.8rem',
+          marginTop: '0.5rem'
+        }}>
+          <div className="context-grid" style={{ 
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '0.5rem'
+          }}>
+            <div>
+              <strong style={{ color: '#dc3545' }}>Current Value:</strong>
+              <div style={{ 
+                fontFamily: 'monospace',
+                backgroundColor: '#fff',
+                padding: '0.25rem',
+                borderRadius: '3px',
+                border: '1px solid #dee2e6',
+                marginTop: '0.25rem'
+              }}>
+                {JSON.stringify(validationMessage.context.actual, null, 2)}
+              </div>
+            </div>
+            <div>
+              <strong style={{ color: '#28a745' }}>Expected Value:</strong>
+              <div style={{ 
+                fontFamily: 'monospace',
+                backgroundColor: '#fff',
+                padding: '0.25rem',
+                borderRadius: '3px',
+                border: '1px solid #dee2e6',
+                marginTop: '0.25rem'
+              }}>
+                {JSON.stringify(validationMessage.context.expected, null, 2)}
+              </div>
+            </div>
+          </div>
+          
+          {validationMessage.context.calculations && (
+            <div className="calculations" style={{ marginTop: '0.75rem' }}>
+              <strong style={{ color: '#495057' }}>Calculations:</strong>
+              <div style={{ 
+                fontFamily: 'monospace',
+                backgroundColor: '#fff',
+                padding: '0.5rem',
+                borderRadius: '3px',
+                border: '1px solid #dee2e6',
+                marginTop: '0.25rem',
+                maxHeight: '150px',
+                overflow: 'auto'
+              }}>
+                <pre style={{ margin: 0, fontSize: '0.75rem' }}>
+                  {JSON.stringify(validationMessage.context.calculations, null, 2)}
+                </pre>
+              </div>
+            </div>
+          )}
+        </div>
+      </details>
+
+      {/* GitHedgehog Documentation Link (if applicable) */}
+      {validationMessage.code.includes('LAG') && (
+        <div className="documentation-link" style={{ marginTop: '0.5rem' }}>
+          <a
+            href="https://docs.githedgehog.com/concepts/fabric-configuration"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              fontSize: '0.8rem',
+              color: '#007bff',
+              textDecoration: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.25rem'
+            }}
+          >
+            <span aria-hidden="true">📖</span>
+            Learn more about GitHedgehog LAG configuration
+            <span aria-hidden="true">↗</span>
+          </a>
+        </div>
+      )}
     </div>
   );
 }

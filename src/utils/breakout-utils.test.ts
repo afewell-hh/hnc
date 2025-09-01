@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest'
-import { calculateEffectiveCapacity, createBreakoutConfig, validateBreakoutConfig } from './breakout-utils'
+import { 
+  calculateEffectiveCapacity, 
+  createBreakoutConfig, 
+  validateBreakoutConfig,
+  generateBreakoutPortNames,
+  allocateBreakoutGroups,
+  validateBreakoutAllocation
+} from './breakout-utils'
 import type { SwitchProfile } from '../ingest/types'
 
 describe('Breakout Utils', () => {
@@ -139,6 +146,179 @@ describe('Breakout Utils', () => {
       
       expect(result.warnings.length).toBeGreaterThan(0)
       expect(result.warnings.some(w => w.includes('Mixed switch models'))).toBe(true)
+    })
+  })
+
+  describe('generateBreakoutPortNames', () => {
+    it('should generate deterministic child port names for E1/1 format', () => {
+      const result = generateBreakoutPortNames('E1/1', '4x25G')
+      
+      expect(result).toEqual([
+        'Ethernet1/0/1',
+        'Ethernet1/0/2', 
+        'Ethernet1/0/3',
+        'Ethernet1/0/4'
+      ])
+    })
+
+    it('should generate names for Ethernet1 format', () => {
+      const result = generateBreakoutPortNames('Ethernet1', '4x25G')
+      
+      expect(result).toEqual([
+        'Ethernet1/0/1',
+        'Ethernet1/0/2',
+        'Ethernet1/0/3', 
+        'Ethernet1/0/4'
+      ])
+    })
+
+    it('should handle different slot numbers', () => {
+      const result = generateBreakoutPortNames('E1/48', '4x25G')
+      
+      expect(result).toEqual([
+        'Ethernet48/0/1',
+        'Ethernet48/0/2',
+        'Ethernet48/0/3',
+        'Ethernet48/0/4'
+      ])
+    })
+
+    it('should fallback for unrecognized port format', () => {
+      const result = generateBreakoutPortNames('UnknownPort', '4x25G')
+      
+      expect(result).toEqual([
+        'UnknownPort/0/1',
+        'UnknownPort/0/2',
+        'UnknownPort/0/3',
+        'UnknownPort/0/4'
+      ])
+    })
+
+    it('should handle different breakout types', () => {
+      const result = generateBreakoutPortNames('E1/1', '2x50G')
+      
+      expect(result).toHaveLength(1) // Fallback to 1 when not 4x
+    })
+  })
+
+  describe('allocateBreakoutGroups', () => {
+    it('should allocate groups in whole units only', () => {
+      const availablePorts = ['E1/1', 'E1/2', 'E1/3', 'E1/4', 'E1/5']
+      const result = allocateBreakoutGroups(availablePorts, 3, '4x25G')
+      
+      expect(result.allocatedGroups).toHaveLength(3)
+      expect(result.remainingPorts).toEqual(['E1/4', 'E1/5'])
+      expect(result.warnings).toHaveLength(0)
+    })
+
+    it('should provide deterministic allocation with sorting', () => {
+      const availablePorts = ['E1/5', 'E1/1', 'E1/3', 'E1/2', 'E1/4']
+      const result = allocateBreakoutGroups(availablePorts, 2, '4x25G')
+      
+      // Should allocate E1/1 and E1/2 (first two after sorting)
+      expect(result.allocatedGroups[0].basePort).toBe('E1/1')
+      expect(result.allocatedGroups[1].basePort).toBe('E1/2')
+      expect(result.remainingPorts).toEqual(['E1/3', 'E1/4', 'E1/5'])
+    })
+
+    it('should generate correct child port names for each group', () => {
+      const availablePorts = ['E1/1', 'E1/2']
+      const result = allocateBreakoutGroups(availablePorts, 2, '4x25G')
+      
+      expect(result.allocatedGroups[0].childPorts).toEqual([
+        'Ethernet1/0/1', 'Ethernet1/0/2', 'Ethernet1/0/3', 'Ethernet1/0/4'
+      ])
+      expect(result.allocatedGroups[1].childPorts).toEqual([
+        'Ethernet2/0/1', 'Ethernet2/0/2', 'Ethernet2/0/3', 'Ethernet2/0/4'
+      ])
+    })
+
+    it('should warn when insufficient ports available', () => {
+      const availablePorts = ['E1/1', 'E1/2']
+      const result = allocateBreakoutGroups(availablePorts, 5, '4x25G')
+      
+      expect(result.warnings).toHaveLength(1)
+      expect(result.warnings[0]).toContain('Requested 5 breakout groups but only 2 ports available')
+      expect(result.allocatedGroups).toHaveLength(2) // Only allocate what's available
+    })
+
+    it('should assign sequential group IDs', () => {
+      const availablePorts = ['E1/1', 'E1/2', 'E1/3']
+      const result = allocateBreakoutGroups(availablePorts, 3, '4x25G')
+      
+      expect(result.allocatedGroups[0].groupId).toBe(1)
+      expect(result.allocatedGroups[1].groupId).toBe(2)
+      expect(result.allocatedGroups[2].groupId).toBe(3)
+    })
+  })
+
+  describe('validateBreakoutAllocation', () => {
+    it('should validate clean breakout-only allocation', () => {
+      const breakoutGroups = [
+        { basePort: 'E1/1', childPorts: ['Ethernet1/0/1', 'Ethernet1/0/2', 'Ethernet1/0/3', 'Ethernet1/0/4'] },
+        { basePort: 'E1/2', childPorts: ['Ethernet2/0/1', 'Ethernet2/0/2', 'Ethernet2/0/3', 'Ethernet2/0/4'] }
+      ]
+      const regularPorts: string[] = []
+      
+      const result = validateBreakoutAllocation(breakoutGroups, regularPorts, false)
+      
+      expect(result.isValid).toBe(true)
+      expect(result.warnings).toHaveLength(0)
+      expect(result.errors).toHaveLength(0)
+      expect(result.hasMixedAllocation).toBe(false)
+    })
+
+    it('should warn about mixed allocation when not allowed', () => {
+      const breakoutGroups = [
+        { basePort: 'E1/1', childPorts: ['Ethernet1/0/1', 'Ethernet1/0/2', 'Ethernet1/0/3', 'Ethernet1/0/4'] }
+      ]
+      const regularPorts = ['E1/5', 'E1/6']
+      
+      const result = validateBreakoutAllocation(breakoutGroups, regularPorts, false)
+      
+      expect(result.isValid).toBe(true) // Warnings don't make it invalid
+      expect(result.warnings).toHaveLength(1)
+      expect(result.warnings[0]).toContain('Mixed port allocation detected')
+      expect(result.hasMixedAllocation).toBe(true)
+    })
+
+    it('should allow mixed allocation when explicitly permitted', () => {
+      const breakoutGroups = [
+        { basePort: 'E1/1', childPorts: ['Ethernet1/0/1', 'Ethernet1/0/2', 'Ethernet1/0/3', 'Ethernet1/0/4'] }
+      ]
+      const regularPorts = ['E1/5', 'E1/6']
+      
+      const result = validateBreakoutAllocation(breakoutGroups, regularPorts, true)
+      
+      expect(result.isValid).toBe(true)
+      expect(result.warnings).toHaveLength(0) // No warnings when mixed mode allowed
+      expect(result.hasMixedAllocation).toBe(true)
+    })
+
+    it('should detect duplicate base ports', () => {
+      const breakoutGroups = [
+        { basePort: 'E1/1', childPorts: ['Ethernet1/0/1', 'Ethernet1/0/2', 'Ethernet1/0/3', 'Ethernet1/0/4'] },
+        { basePort: 'E1/1', childPorts: ['Ethernet1/0/1', 'Ethernet1/0/2', 'Ethernet1/0/3', 'Ethernet1/0/4'] }
+      ]
+      const regularPorts: string[] = []
+      
+      const result = validateBreakoutAllocation(breakoutGroups, regularPorts, false)
+      
+      expect(result.isValid).toBe(false)
+      expect(result.errors).toHaveLength(2) // Duplicate base ports AND child ports
+      expect(result.errors.some(e => e.includes('Duplicate base ports'))).toBe(true)
+    })
+
+    it('should detect port conflicts between regular and breakout', () => {
+      const breakoutGroups = [
+        { basePort: 'E1/1', childPorts: ['Ethernet1/0/1', 'Ethernet1/0/2', 'Ethernet1/0/3', 'Ethernet1/0/4'] }
+      ]
+      const regularPorts = ['E1/1', 'E1/2'] // E1/1 conflicts with breakout base port
+      
+      const result = validateBreakoutAllocation(breakoutGroups, regularPorts, false)
+      
+      expect(result.isValid).toBe(false)
+      expect(result.errors.some(e => e.includes('Port conflicts between regular and breakout'))).toBe(true)
     })
   })
 })

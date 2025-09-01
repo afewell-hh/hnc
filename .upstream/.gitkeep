@@ -1,0 +1,3 @@
+# Upstream repository mirrors
+# This directory contains shallow clones of upstream githedgehog repositories
+# Used for extracting CRDs, switch profiles, and examples

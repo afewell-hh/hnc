@@ -11,11 +11,13 @@ import { useUserMode } from '../contexts/UserModeContext'
 import { Tooltip, InlineHint, HelpButton } from './GuidedHints'
 import { BreakoutBadge } from '../ui/BreakoutBadge'
 import HistoryView from './HistoryView'
+import { BulkOperationsPanel } from './BulkOperationsPanel'
 
 export const FabricDesignerView: React.FC = () => {
   const [state, send] = useMachine(fabricDesignMachine, {})
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false)
   const [isHistoryViewOpen, setIsHistoryViewOpen] = useState(false)
+  const [showBulkOperations, setShowBulkOperations] = useState(false)
   const { isGuided, isExpert } = useUserMode()
   
   const handleInputChange = (field: string, value: any) => {
@@ -43,6 +45,17 @@ export const FabricDesignerView: React.FC = () => {
   const handleCloseImport = () => setIsImportDialogOpen(false)
   const handleOpenHistory = () => setIsHistoryViewOpen(true)
   const handleCloseHistory = () => setIsHistoryViewOpen(false)
+
+  // Bulk operations handlers
+  const handleBulkOperationsApply = (modifiedSpec: FabricSpec) => {
+    // Update the machine state with the bulk-modified spec
+    send({ type: 'UPDATE_CONFIG', data: modifiedSpec })
+    setShowBulkOperations(false)
+    // Auto-compute topology after bulk changes
+    setTimeout(() => {
+      send({ type: 'COMPUTE_TOPOLOGY' })
+    }, 100)
+  }
 
   const { 
     config, 
@@ -117,6 +130,27 @@ export const FabricDesignerView: React.FC = () => {
           >
             📁 Import
           </button>
+          {(config.leafClasses && config.leafClasses.length > 0) && (
+            <button
+              onClick={() => setShowBulkOperations(!showBulkOperations)}
+              disabled={currentState === 'importing' || currentState === 'saving'}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: showBulkOperations ? '#fd7e14' : '#6f42c1',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: currentState !== 'importing' && currentState !== 'saving' ? 'pointer' : 'not-allowed',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+              data-testid="bulk-operations-button"
+              aria-label="Toggle bulk operations panel"
+            >
+              🔧 Bulk Ops
+            </button>
+          )}
         </div>
       </header>
 
@@ -361,7 +395,7 @@ export const FabricDesignerView: React.FC = () => {
                 </Tooltip>
               </FieldWithOverride>
               {config.breakoutEnabled && (
-                <InlineHint variant="info" style={{ marginTop: '5px' }}>
+                <InlineHint variant="info">
                   Breakout enabled: Effective capacity will be calculated with 4x multiplier for endpoint ports.
                 </InlineHint>
               )}
@@ -413,6 +447,21 @@ export const FabricDesignerView: React.FC = () => {
           </InlineHint>
         )}
       </section>
+
+      {/* Bulk Operations Panel - WP-BULK1 */}
+      {showBulkOperations && config.leafClasses && config.leafClasses.length > 0 && (
+        <section 
+          className="bulk-operations-section" 
+          style={{ marginBottom: '30px', padding: '20px', border: '2px solid #6f42c1', borderRadius: '8px' }}
+          data-testid="bulk-operations-section"
+        >
+          <BulkOperationsPanel
+            fabricSpec={config as FabricSpec}
+            onApplyChanges={handleBulkOperationsApply}
+            disabled={currentState === 'importing' || currentState === 'saving'}
+          />
+        </section>
+      )}
 
       {/* Preview Section */}
       <section 

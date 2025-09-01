@@ -15,5 +15,5 @@ connections:
     type: uplink
 metadata:
   fabricName: lag-fabric
-  generatedAt: "2025-08-31T21:47:14.904Z"
+  generatedAt: "2025-09-01T06:56:44.799Z"
   totalConnections: 2

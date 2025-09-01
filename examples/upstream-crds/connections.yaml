@@ -1,0 +1,176 @@
+---
+apiVersion: wiring.githedgehog.com/v1beta1
+kind: Connection
+metadata:
+  name: "leaf-1-spine-1-1-1-1-1"
+  namespace: "default"
+  labels:
+    app.kubernetes.io/name: "hnc-connection"
+    app.kubernetes.io/component: "network-connection"
+    hnc.githedgehog.com/type: "uplink"
+    hnc.githedgehog.com/from-device: "leaf-1"
+    hnc.githedgehog.com/to-device: "spine-1"
+spec:
+  unbundled:
+    link:
+      server: "leaf-1"
+      switch: "spine-1"
+  hncMetadata:
+    connectionType: "uplink"
+    portBinding:
+      sourcePort: "1/1"
+      targetPort: "1/1"
+---
+apiVersion: wiring.githedgehog.com/v1beta1
+kind: Connection
+metadata:
+  name: "leaf-1-spine-2-1-2-1-2"
+  namespace: "default"
+  labels:
+    app.kubernetes.io/name: "hnc-connection"
+    app.kubernetes.io/component: "network-connection"
+    hnc.githedgehog.com/type: "uplink"
+    hnc.githedgehog.com/from-device: "leaf-1"
+    hnc.githedgehog.com/to-device: "spine-2"
+spec:
+  unbundled:
+    link:
+      server: "leaf-1"
+      switch: "spine-2"
+  hncMetadata:
+    connectionType: "uplink"
+    portBinding:
+      sourcePort: "1/2"
+      targetPort: "1/2"
+---
+apiVersion: wiring.githedgehog.com/v1beta1
+kind: Connection
+metadata:
+  name: "leaf-2-spine-1-1-1-2-1"
+  namespace: "default"
+  labels:
+    app.kubernetes.io/name: "hnc-connection"
+    app.kubernetes.io/component: "network-connection"
+    hnc.githedgehog.com/type: "uplink"
+    hnc.githedgehog.com/from-device: "leaf-2"
+    hnc.githedgehog.com/to-device: "spine-1"
+spec:
+  unbundled:
+    link:
+      server: "leaf-2"
+      switch: "spine-1"
+  hncMetadata:
+    connectionType: "uplink"
+    portBinding:
+      sourcePort: "1/1"
+      targetPort: "2/1"
+---
+apiVersion: wiring.githedgehog.com/v1beta1
+kind: Connection
+metadata:
+  name: "leaf-2-spine-2-1-2-2-2"
+  namespace: "default"
+  labels:
+    app.kubernetes.io/name: "hnc-connection"
+    app.kubernetes.io/component: "network-connection"
+    hnc.githedgehog.com/type: "uplink"
+    hnc.githedgehog.com/from-device: "leaf-2"
+    hnc.githedgehog.com/to-device: "spine-2"
+spec:
+  unbundled:
+    link:
+      server: "leaf-2"
+      switch: "spine-2"
+  hncMetadata:
+    connectionType: "uplink"
+    portBinding:
+      sourcePort: "1/2"
+      targetPort: "2/2"
+---
+apiVersion: wiring.githedgehog.com/v1beta1
+kind: Connection
+metadata:
+  name: "leaf-1-server-1-1-3-eth0"
+  namespace: "default"
+  labels:
+    app.kubernetes.io/name: "hnc-connection"
+    app.kubernetes.io/component: "network-connection"
+    hnc.githedgehog.com/type: "endpoint"
+    hnc.githedgehog.com/from-device: "leaf-1"
+    hnc.githedgehog.com/to-device: "server-1"
+spec:
+  unbundled:
+    link:
+      server: "server-1"
+      switch: "leaf-1"
+  hncMetadata:
+    connectionType: "endpoint"
+    portBinding:
+      sourcePort: "1/3"
+      targetPort: "eth0"
+---
+apiVersion: wiring.githedgehog.com/v1beta1
+kind: Connection
+metadata:
+  name: "leaf-1-server-2-1-4-eth0"
+  namespace: "default"
+  labels:
+    app.kubernetes.io/name: "hnc-connection"
+    app.kubernetes.io/component: "network-connection"
+    hnc.githedgehog.com/type: "endpoint"
+    hnc.githedgehog.com/from-device: "leaf-1"
+    hnc.githedgehog.com/to-device: "server-2"
+spec:
+  unbundled:
+    link:
+      server: "server-2"
+      switch: "leaf-1"
+  hncMetadata:
+    connectionType: "endpoint"
+    portBinding:
+      sourcePort: "1/4"
+      targetPort: "eth0"
+---
+apiVersion: wiring.githedgehog.com/v1beta1
+kind: Connection
+metadata:
+  name: "leaf-2-server-3-1-3-eth0"
+  namespace: "default"
+  labels:
+    app.kubernetes.io/name: "hnc-connection"
+    app.kubernetes.io/component: "network-connection"
+    hnc.githedgehog.com/type: "endpoint"
+    hnc.githedgehog.com/from-device: "leaf-2"
+    hnc.githedgehog.com/to-device: "server-3"
+spec:
+  unbundled:
+    link:
+      server: "server-3"
+      switch: "leaf-2"
+  hncMetadata:
+    connectionType: "endpoint"
+    portBinding:
+      sourcePort: "1/3"
+      targetPort: "eth0"
+---
+apiVersion: wiring.githedgehog.com/v1beta1
+kind: Connection
+metadata:
+  name: "leaf-2-server-4-1-4-eth0"
+  namespace: "default"
+  labels:
+    app.kubernetes.io/name: "hnc-connection"
+    app.kubernetes.io/component: "network-connection"
+    hnc.githedgehog.com/type: "endpoint"
+    hnc.githedgehog.com/from-device: "leaf-2"
+    hnc.githedgehog.com/to-device: "server-4"
+spec:
+  unbundled:
+    link:
+      server: "server-4"
+      switch: "leaf-2"
+  hncMetadata:
+    connectionType: "endpoint"
+    portBinding:
+      sourcePort: "1/4"
+      targetPort: "eth0"

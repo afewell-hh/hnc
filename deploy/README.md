@@ -1,6 +1,6 @@
-# HNC HOSS Deployment Scaffold
+# HNC Deployment Guide - WP-HOSS1 Implementation Complete
 
-This deployment scaffold provides production-ready Kubernetes deployment for HNC with GitOps capabilities.
+This directory contains the complete WP-HOSS1 implementation for HNC (Hybrid Network Calculator) deployment on HOSS (Hedgehog Operations Support System) ops cluster with comprehensive documentation and production-ready configurations.
 
 ## 🚀 What's Included
 

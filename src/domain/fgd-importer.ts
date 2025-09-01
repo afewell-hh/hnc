@@ -108,7 +108,7 @@ export async function importFromFGD(fgdPath: string): Promise<ImportResult> {
   const assumptions: string[] = [];
   
   try {
-    // Step 1: Load and parse YAML files
+    // Step 1: Load and parse YAML files - detect format (legacy vs CRD)
     const fgdFiles = await loadFGDFiles(fgdPath);
     
     // Step 2: Analyze topology and detect patterns
@@ -131,8 +131,8 @@ export async function importFromFGD(fgdPath: string): Promise<ImportResult> {
     // Step 7: Construct FabricSpec
     const fabricSpec: FabricSpec = {
       name: fabricName,
-      spineModelId: spineModel,
-      leafModelId: leafModel,
+      spineModelId: spineModel as 'DS3000',
+      leafModelId: leafModel as 'DS2000',
       leafClasses: leafClasses.length > 1 ? leafClasses : undefined,
       // Legacy single-class fields for backwards compatibility
       uplinksPerLeaf: leafClasses.length === 1 ? leafClasses[0].uplinksPerLeaf : 
@@ -179,6 +179,7 @@ export async function importFromFGD(fgdPath: string): Promise<ImportResult> {
       validation: {
         isValid: capacityValidation.isValid, // Only validate capacity, not schema constraints
         errors: [
+          // CRD format compatibility info
           // Move schema validation errors to warnings for import compatibility
           ...capacityValidation.errors,
         ],
@@ -262,7 +263,7 @@ function analyzeTopologyPatterns(fgdFiles: FGDFiles) {
   
   // Determine topology type
   const uniqueUplinkCounts = new Set(uplinkPatterns.values());
-  const topologyType = uniqueUplinkCounts.size > 1 || serverTypes.size > 1 ? 'multi-class' : 'single-class';
+  const topologyType: 'single-class' | 'multi-class' = uniqueUplinkCounts.size > 1 || serverTypes.size > 1 ? 'multi-class' : 'single-class';
   
   return {
     topologyType,

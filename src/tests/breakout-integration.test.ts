@@ -23,8 +23,26 @@ describe('Breakout Integration Tests', () => {
     meta: { source: 'test', version: '1.0.0' }
   }
 
+  const ds3000Profile: SwitchProfile = {
+    modelId: 'celestica-ds3000',
+    roles: ['spine'],
+    ports: {
+      endpointAssignable: [],
+      fabricAssignable: ['E1/1-32']
+    },
+    profiles: {
+      endpoint: { portProfile: null, speedGbps: 0 },
+      uplink: { portProfile: 'QSFP28-100G', speedGbps: 100 },
+      breakout: {
+        supportsBreakout: false
+      }
+    },
+    meta: { source: 'test', version: '1.0.0' }
+  }
+
   const switchProfiles = new Map<string, SwitchProfile>()
   switchProfiles.set('DS2000', ds2000Profile)
+  switchProfiles.set('DS3000', ds3000Profile)
 
   it('should integrate breakout validation with fabric specification', () => {
     const fabricSpec: FabricSpec = {
@@ -86,7 +104,7 @@ describe('Breakout Integration Tests', () => {
     expect(validation.hasMixedBreakouts).toBe(true)
     expect(validation.issues.some(issue => 
       issue.type === 'warning' && 
-      issue.message.includes('Mixed breakout usage')
+      issue.message.includes('leaf classes have breakouts enabled while others do not')
     )).toBe(true)
   })
 

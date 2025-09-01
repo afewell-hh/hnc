@@ -145,7 +145,7 @@ const meta: Meta<typeof HistoryView> = {
   decorators: [
     (Story) => {
       // Mock the service functions in the global scope for the component
-      ;(global as any).mockIsGitHubHistoryAvailable = mockIsGitHubHistoryAvailable
+      (global as any).mockIsGitHubHistoryAvailable = mockIsGitHubHistoryAvailable
       ;(global as any).mockCreateGitHubHistoryService = mockCreateGitHubHistoryService
       return <Story />
     }
@@ -277,7 +277,7 @@ export const ServiceUnavailable: Story = {
   decorators: [
     (Story) => {
       // Override availability check to return false
-      ;(global as any).mockIsGitHubHistoryAvailable = () => false
+      (global as any).mockIsGitHubHistoryAvailable = () => false
       return <Story />
     }
   ],
@@ -391,7 +391,7 @@ export const ModalInteraction: Story = {
     
     await step('Should be able to close modal by clicking overlay', async () => {
       // Reset the mock
-      ;(args.onClose as any).mockClear()
+      (args.onClose as any).mockClear()
       
       const overlay = canvas.getByTestId('history-view-overlay')
       await user.click(overlay)

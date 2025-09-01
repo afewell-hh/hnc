@@ -1,0 +1,68 @@
+---
+apiVersion: wiring.githedgehog.com/v1beta1
+kind: Server
+metadata:
+  name: "server-1"
+  namespace: "default"
+  labels:
+    app.kubernetes.io/name: "hnc-server"
+    app.kubernetes.io/component: "endpoint-server"
+    hnc.githedgehog.com/type: "server"
+spec:
+  description: "Server server-1 (server)"
+  profile: "server-profile"
+  hncMetadata:
+    endpointType: "server"
+    connectionCount: 1
+    redundancy: false
+---
+apiVersion: wiring.githedgehog.com/v1beta1
+kind: Server
+metadata:
+  name: "server-2"
+  namespace: "default"
+  labels:
+    app.kubernetes.io/name: "hnc-server"
+    app.kubernetes.io/component: "endpoint-server"
+    hnc.githedgehog.com/type: "server"
+spec:
+  description: "Server server-2 (server)"
+  profile: "server-profile"
+  hncMetadata:
+    endpointType: "server"
+    connectionCount: 1
+    redundancy: false
+---
+apiVersion: wiring.githedgehog.com/v1beta1
+kind: Server
+metadata:
+  name: "server-3"
+  namespace: "default"
+  labels:
+    app.kubernetes.io/name: "hnc-server"
+    app.kubernetes.io/component: "endpoint-server"
+    hnc.githedgehog.com/type: "compute"
+spec:
+  description: "Server server-3 (compute)"
+  profile: "compute-profile"
+  hncMetadata:
+    endpointType: "compute"
+    connectionCount: 1
+    redundancy: false
+---
+apiVersion: wiring.githedgehog.com/v1beta1
+kind: Server
+metadata:
+  name: "server-4"
+  namespace: "default"
+  labels:
+    app.kubernetes.io/name: "hnc-server"
+    app.kubernetes.io/component: "endpoint-server"
+    hnc.githedgehog.com/type: "storage"
+spec:
+  description: "Server server-4 (storage)"
+  profile: "storage-profile"
+  hncMetadata:
+    endpointType: "storage"
+    connectionCount: 1
+    redundancy: false

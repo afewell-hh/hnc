@@ -1,5 +1,8 @@
 
-
+# Upstream repository mirrors (do not commit)
+.upstream/docs/
+.upstream/fabricator/
+.upstream/fabric/
 
 # Dependencies
 node_modules/

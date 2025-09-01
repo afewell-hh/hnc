@@ -43,5 +43,5 @@ connections:
     type: uplink
 metadata:
   fabricName: heterogeneous-fabric
-  generatedAt: "2025-08-31T21:47:14.880Z"
+  generatedAt: "2025-09-01T06:56:44.790Z"
   totalConnections: 6

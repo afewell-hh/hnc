@@ -349,7 +349,7 @@ const HistoryEntries: React.FC<HistoryEntriesProps> = ({ entries, hasMore, total
       
       <div className="history-timeline">
         {entries.map((entry, index) => (
-          <HistoryEntry key={`${entry.type}-${entry.type === 'commit' ? entry.sha : entry.number}`} entry={entry} />
+          <HistoryRow key={`${entry.type}-${entry.type === 'commit' ? entry.sha : entry.number}`} entry={entry} />
         ))}
       </div>
     </div>
@@ -360,7 +360,7 @@ interface HistoryEntryProps {
   entry: HistoryEntry
 }
 
-const HistoryEntry: React.FC<HistoryEntryProps> = ({ entry }) => {
+const HistoryRow: React.FC<HistoryEntryProps> = ({ entry }) => {
   const isCommit = entry.type === 'commit'
   const commitEntry = entry as CommitHistoryEntry
   const prEntry = entry as PRHistoryEntry

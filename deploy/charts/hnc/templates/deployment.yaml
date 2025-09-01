@@ -31,6 +31,10 @@ spec:
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- with .Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       serviceAccountName: {{ include "hnc.serviceAccountName" . }}
       {{- with .Values.initContainers }}
       initContainers:
@@ -60,12 +64,52 @@ spec:
               value: {{ $value | quote }}
             {{- end }}
             {{- if .Values.secrets.github.enabled }}
+            {{- if .Values.secrets.github.existingSecret }}
+            - name: GITHUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.github.existingSecret }}
+                  key: {{ .Values.secrets.github.existingSecretKey | default "token" }}
+            {{- else }}
             - name: GITHUB_TOKEN
               valueFrom:
                 secretKeyRef:
                   name: {{ include "hnc.fullname" . }}-github
                   key: token
             {{- end }}
+            {{- end }}
+            {{- if .Values.secrets.kubeconfig.enabled }}
+            {{- if .Values.secrets.kubeconfig.existingSecret }}
+            - name: KUBECONFIG_CONTENT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.kubeconfig.existingSecret }}
+                  key: {{ .Values.secrets.kubeconfig.existingSecretKey | default "config" }}
+            {{- else }}
+            - name: KUBECONFIG_CONTENT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "hnc.fullname" . }}-kubeconfig
+                  key: config
+            {{- end }}
+            {{- end }}
+            # Cluster information
+            - name: KUBERNETES_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: KUBERNETES_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: KUBERNETES_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: KUBERNETES_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
           volumeMounts:
             - name: tmp
               mountPath: /tmp
@@ -80,6 +124,16 @@ spec:
             {{- if .Values.configMap.enabled }}
             - name: config
               mountPath: /app/config
+              readOnly: true
+            {{- end }}
+            {{- if .Values.secrets.tls.enabled }}
+            - name: tls-certs
+              mountPath: /etc/ssl/certs/app
+              readOnly: true
+            {{- end }}
+            {{- if .Values.secrets.kubeconfig.enabled }}
+            - name: kubeconfig
+              mountPath: /etc/kubeconfig
               readOnly: true
             {{- end }}
             {{- with .Values.extraVolumeMounts }}
@@ -106,6 +160,27 @@ spec:
         - name: config
           configMap:
             name: {{ include "hnc.fullname" . }}-config
+            defaultMode: 0644
+        {{- end }}
+        {{- if .Values.secrets.tls.enabled }}
+        - name: tls-certs
+          secret:
+            {{- if .Values.secrets.tls.existingSecret }}
+            secretName: {{ .Values.secrets.tls.existingSecret }}
+            {{- else }}
+            secretName: {{ include "hnc.fullname" . }}-tls
+            {{- end }}
+            defaultMode: 0400
+        {{- end }}
+        {{- if .Values.secrets.kubeconfig.enabled }}
+        - name: kubeconfig
+          secret:
+            {{- if .Values.secrets.kubeconfig.existingSecret }}
+            secretName: {{ .Values.secrets.kubeconfig.existingSecret }}
+            {{- else }}
+            secretName: {{ include "hnc.fullname" . }}-kubeconfig
+            {{- end }}
+            defaultMode: 0400
         {{- end }}
         {{- with .Values.extraVolumes }}
         {{- toYaml . | nindent 8 }}

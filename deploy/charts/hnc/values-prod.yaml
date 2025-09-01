@@ -1,76 +1,284 @@
-# Production values for HNC
-# Override values.yaml for production environment
+# Production values for HNC on HOSS ops cluster
+# This file contains production-optimized settings
 
-# Production image
+# Application configuration
+app:
+  environment: prod
+  cluster:
+    type: hoss
+    name: ops-cluster-prod
+    isolation: true
+
+# Image configuration
 image:
-  repository: your-registry.com/hnc
-  tag: "0.5.0-alpha"
-  pullPolicy: IfNotPresent
+  repository: ghcr.io/afewell/hnc
+  tag: "0.4.0-alpha"
+  pullPolicy: Always
+  pullSecrets:
+    - name: ghcr-secret
 
-# Production replicas
+# Deployment configuration
 replicaCount: 2
 
-# Production feature flags - more conservative
-env:
-  HNC_VERBOSE: "false"
-  FEATURE_GIT: "true"
-  FEATURE_K8S: "true"
-  FEATURE_HHFAB: "false"  # Disable until validated
-  FEATURE_GH_PR: "false"  # Disable for security
+# Container resources - Production sizing
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 250m
+    memory: 256Mi
 
-# TLS-enabled ingress
+# Service configuration
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 80
+
+# Ingress configuration - Production with TLS
 ingress:
   enabled: true
+  className: "nginx"
   annotations:
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/rewrite-target: /
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
   hosts:
-    - host: hnc.company.com
+    - host: hnc-prod.hoss.fabric
       paths:
         - path: /
           pathType: Prefix
   tls:
-    - secretName: hnc-tls
+    - secretName: hnc-prod-tls-cert
       hosts:
-        - hnc.company.com
+        - hnc-prod.hoss.fabric
 
-# Production resources
-resources:
-  limits:
-    cpu: 500m
-    memory: 512Mi
-  requests:
-    cpu: 100m
-    memory: 128Mi
+# Environment configuration - Production settings
+env:
+  # === Core Configuration ===
+  HNC_VERBOSE: "false"
+  NODE_ENV: "production"
+  PORT: "80"
+  
+  # === Feature Flags ===
+  FEATURE_GIT: "true"
+  FEATURE_K8S: "true"
+  FEATURE_HHFAB: "true"
+  FEATURE_GH_PR: "true"
+  FEATURE_VALIDATION: "true"
+  FEATURE_PERSISTENCE: "true"
+  FEATURE_MONITORING: "true"
+  FEATURE_METRICS: "true"
+  
+  # === GitHub Integration ===
+  GIT_REMOTE: "origin"
+  GITHUB_OWNER: "afewell"
+  GITHUB_REPO: "hnc"
+  
+  # === Kubernetes Integration ===
+  K8S_NAMESPACE: "hnc-prod"
+  K8S_CLUSTER_NAME: "hoss-ops-prod"
+  
+  # === Validation Configuration ===
+  HHFAB: "/usr/local/bin/hhfab"
+  HHFAB_CONFIG: "/etc/hhfab/config.yaml"
+  
+  # === Persistence Configuration ===
+  DATA_DIR: "/app/data"
+  CONFIG_DIR: "/app/config"
+  CACHE_DIR: "/app/cache"
+  
+  # === Performance Tuning ===
+  PLAYWRIGHT_MAX_WORKERS: "2"
+  VITEST_MAX_WORKERS: "4"
+  MAX_CONCURRENT_VALIDATIONS: "5"
+  CACHE_TTL: "7200"
+  
+  # === Monitoring & Observability ===
+  METRICS_ENABLED: "true"
+  METRICS_PORT: "9090"
+  HEALTH_CHECK_PATH: "/health"
+  LOG_LEVEL: "warn"
+  LOG_FORMAT: "json"
 
-# Enable autoscaling
-autoscaling:
+# Secrets configuration - Production
+secrets:
+  github:
+    enabled: true
+    existingSecret: "hnc-github-token"
+    existingSecretKey: "token"
+  
+  tls:
+    enabled: false  # Managed by cert-manager
+
+# Health checks - Production settings
+healthCheck:
   enabled: true
-  minReplicas: 2
-  maxReplicas: 10
-  targetCPUUtilizationPercentage: 70
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: http
+    initialDelaySeconds: 60
+    periodSeconds: 30
+    timeoutSeconds: 10
+    failureThreshold: 3
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: http
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  startupProbe:
+    httpGet:
+      path: /health
+      port: http
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 30
 
-# Enable pod disruption budget
-podDisruptionBudget:
-  enabled: true
-  minAvailable: 1
+# Pod security context - Hardened
+podSecurityContext:
+  fsGroup: 65534
+  runAsNonRoot: true
+  runAsUser: 65534
+  seccompProfile:
+    type: RuntimeDefault
 
-# Production persistence
-persistence:
-  enabled: true
-  size: 10Gi
-  storageClass: gp2
-
-# Security context
+# Container security context - Hardened
 securityContext:
+  allowPrivilegeEscalation: false
   capabilities:
     drop:
     - ALL
   readOnlyRootFilesystem: true
   runAsNonRoot: true
-  runAsUser: 10001
+  runAsUser: 65534
+  seccompProfile:
+    type: RuntimeDefault
 
-podSecurityContext:
-  fsGroup: 10001
-  runAsGroup: 10001
-  runAsUser: 10001
+# Persistence - Production storage
+persistence:
+  enabled: true
+  storageClass: "fast-ssd"
+  accessMode: ReadWriteOnce
+  size: 20Gi
+  mountPath: /app/data
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "fast-ssd"
+
+# Autoscaling - Production ready
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 25
+        periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 30
+
+# Pod disruption budget - Production availability
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+# Node selector - Production nodes
+nodeSelector:
+  node-type: worker
+  environment: production
+
+# Tolerations for production workloads
+tolerations:
+  - key: "workload-type"
+    operator: "Equal"
+    value: "production"
+    effect: "NoSchedule"
+
+# Affinity - Spread across nodes
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      podAffinityTerm:
+        labelSelector:
+          matchExpressions:
+          - key: app.kubernetes.io/name
+            operator: In
+            values:
+            - hnc
+        topologyKey: kubernetes.io/hostname
+
+# Pod annotations - Production monitoring
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "9090"
+  prometheus.io/path: "/metrics"
+
+# Service annotations - Production monitoring
+serviceAnnotations:
+  service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+
+# ConfigMap for production configuration
+configMap:
+  enabled: true
+  data:
+    nginx.conf: |
+      server {
+          listen 80;
+          server_name _;
+          root /usr/share/nginx/html;
+          index index.html;
+          
+          # Security headers
+          add_header X-Frame-Options "SAMEORIGIN" always;
+          add_header X-Content-Type-Options "nosniff" always;
+          add_header X-XSS-Protection "1; mode=block" always;
+          add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+          add_header Content-Security-Policy "default-src 'self' 'unsafe-inline' 'unsafe-eval'; img-src 'self' data: https:; font-src 'self' data: https:;" always;
+          
+          # SPA routing
+          location / {
+              try_files $uri $uri/ /index.html;
+          }
+          
+          # Health check
+          location /health {
+              access_log off;
+              return 200 "healthy\n";
+              add_header Content-Type text/plain;
+          }
+          
+          # Metrics endpoint
+          location /metrics {
+              access_log off;
+              return 200 "# No metrics yet\n";
+              add_header Content-Type text/plain;
+          }
+          
+          # Static assets with caching
+          location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+              expires 1y;
+              add_header Cache-Control "public, immutable";
+              add_header Pragma public;
+              add_header Vary Accept-Encoding;
+          }
+      }

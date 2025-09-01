@@ -1,0 +1,47 @@
+apiVersion: fabric.githedgehog.com/v1beta1
+kind: Fabric
+metadata:
+  name: "test-fabric"
+  namespace: "default"
+  labels:
+    app.kubernetes.io/name: "hnc-fabric"
+    app.kubernetes.io/component: "fabric-topology"
+    hnc.githedgehog.com/fabric: "test-fabric"
+  annotations:
+    hnc.githedgehog.com/generated-at: "2025-09-01T10:00:00.000Z"
+    hnc.githedgehog.com/total-devices: "8"
+spec:
+  switches:
+    - "spine-1"
+    - "spine-2"
+    - "leaf-1"
+    - "leaf-2"
+  servers:
+    - "server-1"
+    - "server-2"
+    - "server-3"
+    - "server-4"
+  connections:
+    - "leaf-1-spine-1-1-1-1-1"
+    - "leaf-1-spine-2-1-2-1-2"
+    - "leaf-2-spine-1-1-1-2-1"
+    - "leaf-2-spine-2-1-2-2-2"
+    - "leaf-1-server-1-1-3-eth0"
+    - "leaf-1-server-2-1-4-eth0"
+    - "leaf-2-server-3-1-3-eth0"
+    - "leaf-2-server-4-1-4-eth0"
+  topology:
+    spineLeaf:
+      spines: 2
+      leafs: 2
+      fabricLinks: 4
+status:
+  conditions:
+    - type: "Ready"
+      status: "True"
+      lastTransitionTime: "2025-09-01T10:00:00.000Z"
+      reason: "FabricGenerated"
+      message: "Fabric topology generated successfully"
+  totalSwitches: 4
+  totalServers: 4
+  totalConnections: 8

@@ -5,17 +5,27 @@ export interface ModeToggleProps {
   className?: string
   style?: React.CSSProperties
   size?: 'small' | 'medium' | 'large'
+  showLabels?: boolean
+  showIcons?: boolean
+  showDescriptions?: boolean
+  onModeChange?: (mode: UserMode, previousMode: UserMode) => void
 }
 
 export const ModeToggle: React.FC<ModeToggleProps> = ({
   className = '',
   style = {},
-  size = 'medium'
+  size = 'medium',
+  showLabels = true,
+  showIcons = true,
+  showDescriptions = false,
+  onModeChange
 }) => {
   const { mode, setMode, isGuided, isExpert } = useUserMode()
 
   const handleToggle = (newMode: UserMode) => {
+    const previousMode = mode
     setMode(newMode)
+    onModeChange?.(newMode, previousMode)
   }
 
   const baseStyles: React.CSSProperties = {
@@ -57,39 +67,60 @@ export const ModeToggle: React.FC<ModeToggleProps> = ({
     color: '#495057'
   }
 
+  const descriptionStyles: React.CSSProperties = {
+    fontSize: '11px',
+    color: '#6c757d',
+    marginTop: '4px',
+    lineHeight: '1.3'
+  }
+
   return (
     <div 
       className={`mode-toggle ${className}`}
-      style={baseStyles}
       data-testid="mode-toggle"
       role="group"
       aria-label="User experience mode toggle"
+      data-current-mode={mode}
     >
-      <span style={labelStyles}>Mode:</span>
-      <button
-        type="button"
-        onClick={() => handleToggle('guided')}
-        style={buttonStyles(isGuided)}
-        data-testid="guided-mode-button"
-        aria-label="Switch to guided mode"
-        aria-pressed={isGuided}
-        title="Guided mode: Shows helpful hints and tooltips for new users"
-      >
-        <span style={iconStyles}>🎯</span>
-        Guided
-      </button>
-      <button
-        type="button"
-        onClick={() => handleToggle('expert')}
-        style={buttonStyles(isExpert)}
-        data-testid="expert-mode-button"
-        aria-label="Switch to expert mode"
-        aria-pressed={isExpert}
-        title="Expert mode: Shows advanced features like provenance chips"
-      >
-        <span style={iconStyles}>⚡</span>
-        Expert
-      </button>
+      <div style={baseStyles}>
+        {showLabels && <span style={labelStyles}>Mode:</span>}
+        <button
+          type="button"
+          onClick={() => handleToggle('guided')}
+          style={buttonStyles(isGuided)}
+          data-testid="guided-mode-button"
+          data-mode="guided"
+          aria-label="Switch to guided mode"
+          aria-pressed={isGuided}
+          title="Guided mode: Shows helpful hints and tooltips for new users"
+        >
+          {showIcons && <span style={iconStyles}>🎯</span>}
+          Guided
+        </button>
+        <button
+          type="button"
+          onClick={() => handleToggle('expert')}
+          style={buttonStyles(isExpert)}
+          data-testid="expert-mode-button"
+          data-mode="expert"
+          aria-label="Switch to expert mode"
+          aria-pressed={isExpert}
+          title="Expert mode: Shows advanced features like provenance chips"
+        >
+          {showIcons && <span style={iconStyles}>⚡</span>}
+          Expert
+        </button>
+      </div>
+      
+      {showDescriptions && (
+        <div style={descriptionStyles} data-testid="mode-descriptions">
+          {isGuided ? (
+            <div>Guided mode provides helpful tips and explanations for each step</div>
+          ) : (
+            <div>Expert mode shows advanced controls and field provenance information</div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
