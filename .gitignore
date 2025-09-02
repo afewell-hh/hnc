@@ -50,7 +50,26 @@ claude-flow.bat
 claude-flow.ps1
 hive-mind-prompt-*.txt
 
-#Secrets
+# Secrets
 .env
 .env.local
 .env.*.local.env
+
+# Temporary files and reports
+qc-report.txt
+SCALE-UP-VALIDATION-REPORT.md
+TRACK-B-SUMMARY.md
+WP-PIN1-IMPLEMENTATION-SUMMARY.md
+DEPLOYMENT-CHECKLIST.md
+validation-reports/
+
+# Release artifacts
+storybook-static.zip
+*.zip
+
+# Node cache
+node_modules/.vite/
+node_modules/.cache/
+
+# Claude Flow metrics
+.claude-flow/metrics/
