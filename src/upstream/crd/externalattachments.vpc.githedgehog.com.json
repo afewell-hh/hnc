@@ -1,0 +1,145 @@
+{
+  "apiVersion": "apiextensions.k8s.io/v1",
+  "kind": "CustomResourceDefinition",
+  "metadata": {
+    "annotations": {
+      "controller-gen.kubebuilder.io/version": "v0.17.2"
+    },
+    "name": "externalattachments.vpc.githedgehog.com"
+  },
+  "spec": {
+    "group": "vpc.githedgehog.com",
+    "names": {
+      "categories": [
+        "hedgehog",
+        "fabric",
+        "external"
+      ],
+      "kind": "ExternalAttachment",
+      "listKind": "ExternalAttachmentList",
+      "plural": "externalattachments",
+      "shortNames": [
+        "extattach"
+      ],
+      "singular": "externalattachment"
+    },
+    "scope": "Namespaced",
+    "versions": [
+      {
+        "additionalPrinterColumns": [
+          {
+            "jsonPath": ".spec.external",
+            "name": "External",
+            "type": "string"
+          },
+          {
+            "jsonPath": ".spec.connection",
+            "name": "Connection",
+            "type": "string"
+          },
+          {
+            "jsonPath": ".spec.switch.vlan",
+            "name": "SwVLAN",
+            "priority": 1,
+            "type": "string"
+          },
+          {
+            "jsonPath": ".spec.switch.ip",
+            "name": "SwIP",
+            "priority": 1,
+            "type": "string"
+          },
+          {
+            "jsonPath": ".spec.neighbor.asn",
+            "name": "NeighASN",
+            "priority": 1,
+            "type": "string"
+          },
+          {
+            "jsonPath": ".spec.neighbor.ip",
+            "name": "NeighIP",
+            "priority": 1,
+            "type": "string"
+          },
+          {
+            "jsonPath": ".metadata.creationTimestamp",
+            "name": "Age",
+            "type": "date"
+          }
+        ],
+        "name": "v1beta1",
+        "schema": {
+          "openAPIV3Schema": {
+            "description": "ExternalAttachment is a definition of how specific switch is connected with external system (External object).\nEffectively it represents BGP peering between the switch and external system including all needed configuration.",
+            "properties": {
+              "apiVersion": {
+                "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+                "type": "string"
+              },
+              "kind": {
+                "description": "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+                "type": "string"
+              },
+              "metadata": {
+                "type": "object"
+              },
+              "spec": {
+                "description": "Spec is the desired state of the ExternalAttachment",
+                "properties": {
+                  "connection": {
+                    "description": "Connection is the name of the Connection object this attachment belongs to (essentially the name of the switch/port)",
+                    "type": "string"
+                  },
+                  "external": {
+                    "description": "External is the name of the External object this attachment belongs to",
+                    "type": "string"
+                  },
+                  "neighbor": {
+                    "description": "Neighbor is the BGP neighbor configuration for the external attachment",
+                    "properties": {
+                      "asn": {
+                        "description": "ASN is the ASN of the BGP neighbor",
+                        "format": "int32",
+                        "type": "integer"
+                      },
+                      "ip": {
+                        "description": "IP is the IP address of the BGP neighbor to peer with",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "switch": {
+                    "description": "Switch is the switch port configuration for the external attachment",
+                    "properties": {
+                      "ip": {
+                        "description": "IP is the IP address of the subinterface on a switch port specified in the connection",
+                        "type": "string"
+                      },
+                      "vlan": {
+                        "description": "VLAN (optional) is the VLAN ID used for the subinterface on a switch port specified in the connection, set to 0 if no VLAN is used",
+                        "type": "integer"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              },
+              "status": {
+                "description": "Status is the observed state of the ExternalAttachment",
+                "type": "object"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "served": true,
+        "storage": true,
+        "subresources": {
+          "status": {}
+        }
+      }
+    ]
+  }
+}

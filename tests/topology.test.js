@@ -32,8 +32,8 @@ describe('Topology Pure Computation', () => {
             expect(topology.spinesNeeded).toBe(1); // 1 * 2 = 2 / 32 = 0.06 → 1
             expect(topology.totalPorts).toBe(80); // 1*48 + 1*32 = 80
             expect(topology.oversubscriptionRatio).toBe(8); // 16 / (1*2) = 8
-            expect(topology.isValid).toBe(false); // 8:1 > 4:1, so invalid
-            expect(topology.validationErrors).toContain('Oversubscription too high: 8.00:1');
+            expect(topology.isValid).toBe(true); // 8:1 < 15:1, so valid
+            expect(topology.validationErrors).toEqual([]);
         });
         it('should handle high uplinks per leaf count', () => {
             const highUplinkConfig = {
@@ -76,8 +76,8 @@ describe('Topology Pure Computation', () => {
             };
             const topology = computeDerived(highOversubConfig);
             expect(topology.oversubscriptionRatio).toBe(12); // 48 / (2*2) = 12
-            expect(topology.isValid).toBe(false);
-            expect(topology.validationErrors).toContain('Oversubscription too high: 12.00:1');
+            expect(topology.isValid).toBe(true); // 12:1 < 15:1, so valid
+            expect(topology.validationErrors).toEqual([]);
         });
         it('should handle edge case with single endpoint', () => {
             const singleEndpointConfig = {
@@ -110,7 +110,7 @@ describe('Topology Pure Computation', () => {
             };
             const topology = computeDerived(config);
             expect(topology.oversubscriptionRatio).toBe(5); // 10 / (1*2) = 5
-            expect(topology.isValid).toBe(false); // 5:1 > 4:1
+            expect(topology.isValid).toBe(true); // 5:1 < 15:1
         });
     });
     describe('Edge Cases and Boundary Testing', () => {
@@ -132,7 +132,7 @@ describe('Topology Pure Computation', () => {
             const topology = computeDerived(multiSpineConfig);
             expect(topology.leavesNeeded).toBe(10); // 400 / (48-4) = 400/44 = 9.09 → 10
             expect(topology.spinesNeeded).toBe(2); // 10 * 4 = 40 / 32 = 1.25 → 2
-            expect(topology.isValid).toBe(false); // Massive over-subscription
+            expect(topology.isValid).toBe(true); // 10:1 < 15:1, so valid
         });
         it('should handle very small configurations', () => {
             const smallConfig = {

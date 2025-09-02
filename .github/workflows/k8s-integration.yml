@@ -1,0 +1,302 @@
+# Optional K8s Integration CI Workflow
+# Only runs when K8s integration is explicitly enabled
+
+name: K8s Integration Validation
+
+on:
+  push:
+    branches: [main, 'release/*']
+    paths:
+      - 'src/**'
+      - 'tools/int-k8s.js'
+      - '.github/workflows/k8s-integration.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'tools/int-k8s.js'
+      - '.github/workflows/k8s-integration.yml'
+  workflow_dispatch:
+    inputs:
+      enable_k8s_validation:
+        description: 'Enable K8s cluster validation'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  # Always run unit tests (no cluster required)
+  unit-tests:
+    name: K8s Unit Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run K8s unit tests
+        run: |
+          npm test -- src/services/k8s.service.test.ts
+
+  # Optional integration tests (requires cluster)
+  integration-tests:
+    name: K8s Integration Tests
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    
+    # Only run if explicitly enabled or on main branch
+    if: |
+      github.event.inputs.enable_k8s_validation == 'true' ||
+      (github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[k8s-test]'))
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.28.0'
+          
+      - name: Setup kind (local K8s cluster)
+        uses: helm/kind-action@v1
+        with:
+          version: v0.20.0
+          kubectl_version: v1.28.0
+          cluster_name: hnc-test
+          config: |
+            kind: Cluster
+            apiVersion: kind.x-k8s.io/v1alpha4
+            nodes:
+            - role: control-plane
+              kubeadmConfigPatches:
+              - |
+                kind: InitConfiguration
+                nodeRegistration:
+                  kubeletExtraArgs:
+                    node-labels: "ingress-ready=true"
+            - role: worker
+              
+      - name: Wait for cluster ready
+        run: |
+          kubectl cluster-info --context kind-hnc-test
+          kubectl wait --for=condition=Ready nodes --all --timeout=300s
+          
+      - name: Create test namespace
+        run: |
+          kubectl create namespace hnc-it-ci-test
+          kubectl label namespace hnc-it-ci-test hncRunId=ci-test
+          
+      - name: Generate test YAML
+        run: |
+          mkdir -p test-output
+          cat << 'EOF' > test-output/test-fabric.yaml
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: test-config
+            namespace: hnc-it-ci-test
+            labels:
+              hncRunId: ci-test
+              component: fabric-config
+          data:
+            fabric.yaml: |
+              # Test fabric configuration
+              apiVersion: fabric.hnc.io/v1
+              kind: Fabric
+              metadata:
+                name: test-fabric
+          ---
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: test-service
+            namespace: hnc-it-ci-test
+            labels:
+              hncRunId: ci-test
+              component: fabric-service
+          spec:
+            selector:
+              app: test-fabric
+            ports:
+            - port: 80
+              targetPort: 8080
+          EOF
+          
+      - name: Apply test resources
+        run: |
+          kubectl apply -f test-output/test-fabric.yaml
+          
+      - name: Validate with int-k8s tool (immediate)
+        env:
+          FEATURE_K8S: 'true'
+        run: |
+          node tools/int-k8s.js \
+            --run-id ci-test \
+            --fgd-file test-output/test-fabric.yaml \
+            --verbose
+            
+      - name: Test GitOps simulation (wait mode)
+        env:
+          FEATURE_K8S: 'true'
+        run: |
+          # Delete resources to simulate GitOps delay
+          kubectl delete -f test-output/test-fabric.yaml
+          
+          # Start validation in background (will wait)
+          timeout 60s node tools/int-k8s.js \
+            --run-id ci-test \
+            --fgd-file test-output/test-fabric.yaml \
+            --wait \
+            --max-retries 5 \
+            --initial-delay 2000 \
+            --verbose &
+          
+          VALIDATOR_PID=$!
+          
+          # Simulate GitOps applying resources after delay
+          sleep 10
+          kubectl apply -f test-output/test-fabric.yaml
+          
+          # Wait for validator to complete
+          wait $VALIDATOR_PID
+          echo "GitOps simulation completed successfully"
+          
+      - name: Test error conditions
+        env:
+          FEATURE_K8S: 'true'
+        run: |
+          # Test missing resources (should fail)
+          kubectl delete configmap test-config -n hnc-it-ci-test
+          
+          if node tools/int-k8s.js \
+            --run-id ci-test \
+            --fgd-file test-output/test-fabric.yaml \
+            --verbose; then
+            echo "ERROR: Validation should have failed for missing resources"
+            exit 1
+          else
+            echo "SUCCESS: Validation correctly detected missing resources"
+          fi
+          
+      - name: Cleanup test resources
+        if: always()
+        run: |
+          kubectl delete namespace hnc-it-ci-test --ignore-not-found=true
+
+  # CLI validation (no cluster required)
+  cli-validation:
+    name: CLI Tool Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Test CLI help output
+        run: |
+          node tools/int-k8s-standalone.mjs --help
+          
+      - name: Test CLI error handling
+        run: |
+          # Test missing required arguments
+          if node tools/int-k8s-standalone.mjs 2>/dev/null; then
+            echo "ERROR: CLI should fail without required arguments"
+            exit 1
+          else
+            echo "SUCCESS: CLI correctly requires arguments"
+          fi
+          
+      - name: Test feature flag disabled
+        env:
+          FEATURE_K8S: 'false'
+        run: |
+          # Should exit with error when disabled
+          if node tools/int-k8s-standalone.mjs --run-id test --fgd-file /dev/null 2>/dev/null; then
+            echo "ERROR: CLI should fail when feature flag is disabled"
+            exit 1
+          else
+            echo "SUCCESS: CLI correctly respects feature flag"
+          fi
+          
+      - name: Test demo mode functionality
+        run: |
+          # Create dummy YAML file
+          echo "apiVersion: v1" > dummy.yaml
+          echo "kind: ConfigMap" >> dummy.yaml
+          echo "metadata:" >> dummy.yaml
+          echo "  name: test" >> dummy.yaml
+          echo "  labels:" >> dummy.yaml
+          echo "    hncRunId: test" >> dummy.yaml
+          
+          # Should work in demo mode
+          if node tools/int-k8s-standalone.mjs \
+            --run-id test \
+            --fgd-file dummy.yaml \
+            --demo 2>&1 | grep -q "Demo completed successfully"; then
+            echo "SUCCESS: CLI demo mode works correctly"
+          else
+            echo "ERROR: CLI demo mode should work"
+            exit 1
+          fi
+
+  # Documentation and schema validation
+  documentation:
+    name: Documentation Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Validate documentation exists
+        run: |
+          [ -f "docs/k8s-integration.md" ] || (echo "K8s integration docs missing" && exit 1)
+          
+      - name: Check documentation completeness
+        run: |
+          grep -q "Prerequisites" docs/k8s-integration.md || (echo "Missing Prerequisites section" && exit 1)
+          grep -q "Quick Start" docs/k8s-integration.md || (echo "Missing Quick Start section" && exit 1)
+          grep -q "CLI Reference" docs/k8s-integration.md || (echo "Missing CLI Reference section" && exit 1)
+          grep -q "Examples" docs/k8s-integration.md || (echo "Missing Examples section" && exit 1)
+          grep -q "Troubleshooting" docs/k8s-integration.md || (echo "Missing Troubleshooting section" && exit 1)
+          echo "Documentation validation passed"
+          
+      - name: Validate feature flag integration
+        run: |
+          grep -q "k8s.*boolean" src/features/feature-flags.ts || (echo "K8s feature flag not found" && exit 1)
+          grep -q "isK8sEnabled" src/features/feature-flags.ts || (echo "K8s feature flag helper not found" && exit 1)
+          echo "Feature flag integration validated"

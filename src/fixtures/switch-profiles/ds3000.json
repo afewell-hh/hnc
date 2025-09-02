@@ -1,0 +1,29 @@
+{
+  "modelId": "celestica-ds3000",
+  "roles": [
+    "spine"
+  ],
+  "ports": {
+    "endpointAssignable": [],
+    "fabricAssignable": [
+      "E1/1-32"
+    ]
+  },
+  "profiles": {
+    "endpoint": {
+      "portProfile": null,
+      "speedGbps": 0
+    },
+    "uplink": {
+      "portProfile": "QSFP28-100G",
+      "speedGbps": 100
+    },
+    "breakout": {
+      "supportsBreakout": false
+    }
+  },
+  "meta": {
+    "source": "switch_profile.go",
+    "version": "v0.3.0"
+  }
+}

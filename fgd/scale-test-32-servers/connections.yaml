@@ -1,0 +1,257 @@
+connections:
+  - from:
+      device: leaf-1
+      port: 2/1
+    to:
+      device: spine-1
+      port: 1/1
+    type: uplink
+  - from:
+      device: leaf-1
+      port: 2/2
+    to:
+      device: spine-1
+      port: 1/2
+    type: uplink
+  - from:
+      device: leaf-1
+      port: 2/3
+    to:
+      device: spine-1
+      port: 1/3
+    type: uplink
+  - from:
+      device: leaf-1
+      port: 2/4
+    to:
+      device: spine-1
+      port: 1/4
+    type: uplink
+  - from:
+      device: srv-default-standardserver-1
+      port: eth0
+    to:
+      device: leaf-1
+      port: 1/1
+    type: endpoint
+  - from:
+      device: srv-default-standardserver-10
+      port: eth0
+    to:
+      device: leaf-1
+      port: 1/10
+    type: endpoint
+  - from:
+      device: srv-default-standardserver-11
+      port: eth0
+    to:
+      device: leaf-1
+      port: 1/11
+    type: endpoint
+  - from:
+      device: srv-default-standardserver-12
+      port: eth0
+    to:
+      device: leaf-1
+      port: 1/12
+    type: endpoint
+  - from:
+      device: srv-default-standardserver-13
+      port: eth0
+    to:
+      device: leaf-1
+      port: 1/13
+    type: endpoint
+  - from:
+      device: srv-default-standardserver-14
+      port: eth0
+    to:
+      device: leaf-1
+      port: 1/14
+    type: endpoint
+  - from:
+      device: srv-default-standardserver-15
+      port: eth0
+    to:
+      device: leaf-1
+      port: 1/15
+    type: endpoint
+  - from:
+      device: srv-default-standardserver-16
+      port: eth0
+    to:
+      device: leaf-1
+      port: 1/16
+    type: endpoint
+  - from:
+      device: srv-default-standardserver-17
+      port: eth0
+    to:
+      device: leaf-1
+      port: 1/17
+    type: endpoint
+  - from:
+      device: srv-default-standardserver-18
+      port: eth0
+    to:
+      device: leaf-1
+      port: 1/18
+    type: endpoint
+  - from:
+      device: srv-default-standardserver-19
+      port: eth0
+    to:
+      device: leaf-1
+      port: 1/19
+    type: endpoint
+  - from:
+      device: srv-default-standardserver-2
+      port: eth0
+    to:
+      device: leaf-1
+      port: 1/2
+    type: endpoint
+  - from:
+      device: srv-default-standardserver-20
+      port: eth0
+    to:
+      device: leaf-1
+      port: 1/20
+    type: endpoint
+  - from:
+      device: srv-default-standardserver-21
+      port: eth0
+    to:
+      device: leaf-1
+      port: 1/21
+    type: endpoint
+  - from:
+      device: srv-default-standardserver-22
+      port: eth0
+    to:
+      device: leaf-1
+      port: 1/22
+    type: endpoint
+  - from:
+      device: srv-default-standardserver-23
+      port: eth0
+    to:
+      device: leaf-1
+      port: 1/23
+    type: endpoint
+  - from:
+      device: srv-default-standardserver-24
+      port: eth0
+    to:
+      device: leaf-1
+      port: 1/24
+    type: endpoint
+  - from:
+      device: srv-default-standardserver-25
+      port: eth0
+    to:
+      device: leaf-1
+      port: 1/25
+    type: endpoint
+  - from:
+      device: srv-default-standardserver-26
+      port: eth0
+    to:
+      device: leaf-1
+      port: 1/26
+    type: endpoint
+  - from:
+      device: srv-default-standardserver-27
+      port: eth0
+    to:
+      device: leaf-1
+      port: 1/27
+    type: endpoint
+  - from:
+      device: srv-default-standardserver-28
+      port: eth0
+    to:
+      device: leaf-1
+      port: 1/28
+    type: endpoint
+  - from:
+      device: srv-default-standardserver-29
+      port: eth0
+    to:
+      device: leaf-1
+      port: 1/29
+    type: endpoint
+  - from:
+      device: srv-default-standardserver-3
+      port: eth0
+    to:
+      device: leaf-1
+      port: 1/3
+    type: endpoint
+  - from:
+      device: srv-default-standardserver-30
+      port: eth0
+    to:
+      device: leaf-1
+      port: 1/30
+    type: endpoint
+  - from:
+      device: srv-default-standardserver-31
+      port: eth0
+    to:
+      device: leaf-1
+      port: 1/31
+    type: endpoint
+  - from:
+      device: srv-default-standardserver-32
+      port: eth0
+    to:
+      device: leaf-1
+      port: 1/32
+    type: endpoint
+  - from:
+      device: srv-default-standardserver-4
+      port: eth0
+    to:
+      device: leaf-1
+      port: 1/4
+    type: endpoint
+  - from:
+      device: srv-default-standardserver-5
+      port: eth0
+    to:
+      device: leaf-1
+      port: 1/5
+    type: endpoint
+  - from:
+      device: srv-default-standardserver-6
+      port: eth0
+    to:
+      device: leaf-1
+      port: 1/6
+    type: endpoint
+  - from:
+      device: srv-default-standardserver-7
+      port: eth0
+    to:
+      device: leaf-1
+      port: 1/7
+    type: endpoint
+  - from:
+      device: srv-default-standardserver-8
+      port: eth0
+    to:
+      device: leaf-1
+      port: 1/8
+    type: endpoint
+  - from:
+      device: srv-default-standardserver-9
+      port: eth0
+    to:
+      device: leaf-1
+      port: 1/9
+    type: endpoint
+metadata:
+  fabricName: Scale-Test-Fabric
+  generatedAt: "2025-09-02T10:00:53.253Z"
+  totalConnections: 36

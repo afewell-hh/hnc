@@ -1,0 +1,100 @@
+metadata:
+  generatedAt: "2025-09-01T06:56:44.807Z"
+  totalSwitches: 24
+switches:
+  - id: leaf-1
+    model: DS2000
+    ports: 48
+    type: leaf
+  - id: leaf-10
+    model: DS2000
+    ports: 48
+    type: leaf
+  - id: leaf-11
+    model: DS2000
+    ports: 48
+    type: leaf
+  - id: leaf-12
+    model: DS2000
+    ports: 48
+    type: leaf
+  - id: leaf-13
+    model: DS2000
+    ports: 48
+    type: leaf
+  - id: leaf-14
+    model: DS2000
+    ports: 48
+    type: leaf
+  - id: leaf-15
+    model: DS2000
+    ports: 48
+    type: leaf
+  - id: leaf-16
+    model: DS2000
+    ports: 48
+    type: leaf
+  - id: leaf-17
+    model: DS2000
+    ports: 48
+    type: leaf
+  - id: leaf-18
+    model: DS2000
+    ports: 48
+    type: leaf
+  - id: leaf-19
+    model: DS2000
+    ports: 48
+    type: leaf
+  - id: leaf-2
+    model: DS2000
+    ports: 48
+    type: leaf
+  - id: leaf-20
+    model: DS2000
+    ports: 48
+    type: leaf
+  - id: leaf-21
+    model: DS2000
+    ports: 48
+    type: leaf
+  - id: leaf-22
+    model: DS2000
+    ports: 48
+    type: leaf
+  - id: leaf-3
+    model: DS2000
+    ports: 48
+    type: leaf
+  - id: leaf-4
+    model: DS2000
+    ports: 48
+    type: leaf
+  - id: leaf-5
+    model: DS2000
+    ports: 48
+    type: leaf
+  - id: leaf-6
+    model: DS2000
+    ports: 48
+    type: leaf
+  - id: leaf-7
+    model: DS2000
+    ports: 48
+    type: leaf
+  - id: leaf-8
+    model: DS2000
+    ports: 48
+    type: leaf
+  - id: leaf-9
+    model: DS2000
+    ports: 48
+    type: leaf
+  - id: spine-1
+    model: DS3000
+    ports: 32
+    type: spine
+  - id: spine-2
+    model: DS3000
+    ports: 32
+    type: spine

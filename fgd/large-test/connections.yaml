@@ -1,0 +1,313 @@
+connections:
+  - from:
+      device: leaf-1
+      port: uplink-1
+    to:
+      device: spine-1
+      port: downlink-1
+    type: uplink
+  - from:
+      device: leaf-1
+      port: uplink-2
+    to:
+      device: spine-2
+      port: downlink-2
+    type: uplink
+  - from:
+      device: leaf-10
+      port: uplink-1
+    to:
+      device: spine-1
+      port: downlink-19
+    type: uplink
+  - from:
+      device: leaf-10
+      port: uplink-2
+    to:
+      device: spine-2
+      port: downlink-20
+    type: uplink
+  - from:
+      device: leaf-11
+      port: uplink-1
+    to:
+      device: spine-1
+      port: downlink-21
+    type: uplink
+  - from:
+      device: leaf-11
+      port: uplink-2
+    to:
+      device: spine-2
+      port: downlink-22
+    type: uplink
+  - from:
+      device: leaf-12
+      port: uplink-1
+    to:
+      device: spine-1
+      port: downlink-23
+    type: uplink
+  - from:
+      device: leaf-12
+      port: uplink-2
+    to:
+      device: spine-2
+      port: downlink-24
+    type: uplink
+  - from:
+      device: leaf-13
+      port: uplink-1
+    to:
+      device: spine-1
+      port: downlink-25
+    type: uplink
+  - from:
+      device: leaf-13
+      port: uplink-2
+    to:
+      device: spine-2
+      port: downlink-26
+    type: uplink
+  - from:
+      device: leaf-14
+      port: uplink-1
+    to:
+      device: spine-1
+      port: downlink-27
+    type: uplink
+  - from:
+      device: leaf-14
+      port: uplink-2
+    to:
+      device: spine-2
+      port: downlink-28
+    type: uplink
+  - from:
+      device: leaf-15
+      port: uplink-1
+    to:
+      device: spine-1
+      port: downlink-29
+    type: uplink
+  - from:
+      device: leaf-15
+      port: uplink-2
+    to:
+      device: spine-2
+      port: downlink-30
+    type: uplink
+  - from:
+      device: leaf-16
+      port: uplink-1
+    to:
+      device: spine-1
+      port: downlink-31
+    type: uplink
+  - from:
+      device: leaf-16
+      port: uplink-2
+    to:
+      device: spine-2
+      port: downlink-32
+    type: uplink
+  - from:
+      device: leaf-17
+      port: uplink-1
+    to:
+      device: spine-1
+      port: downlink-33
+    type: uplink
+  - from:
+      device: leaf-17
+      port: uplink-2
+    to:
+      device: spine-2
+      port: downlink-34
+    type: uplink
+  - from:
+      device: leaf-18
+      port: uplink-1
+    to:
+      device: spine-1
+      port: downlink-35
+    type: uplink
+  - from:
+      device: leaf-18
+      port: uplink-2
+    to:
+      device: spine-2
+      port: downlink-36
+    type: uplink
+  - from:
+      device: leaf-19
+      port: uplink-1
+    to:
+      device: spine-1
+      port: downlink-37
+    type: uplink
+  - from:
+      device: leaf-19
+      port: uplink-2
+    to:
+      device: spine-2
+      port: downlink-38
+    type: uplink
+  - from:
+      device: leaf-2
+      port: uplink-1
+    to:
+      device: spine-1
+      port: downlink-3
+    type: uplink
+  - from:
+      device: leaf-2
+      port: uplink-2
+    to:
+      device: spine-2
+      port: downlink-4
+    type: uplink
+  - from:
+      device: leaf-20
+      port: uplink-1
+    to:
+      device: spine-1
+      port: downlink-39
+    type: uplink
+  - from:
+      device: leaf-20
+      port: uplink-2
+    to:
+      device: spine-2
+      port: downlink-40
+    type: uplink
+  - from:
+      device: leaf-21
+      port: uplink-1
+    to:
+      device: spine-1
+      port: downlink-41
+    type: uplink
+  - from:
+      device: leaf-21
+      port: uplink-2
+    to:
+      device: spine-2
+      port: downlink-42
+    type: uplink
+  - from:
+      device: leaf-22
+      port: uplink-1
+    to:
+      device: spine-1
+      port: downlink-43
+    type: uplink
+  - from:
+      device: leaf-22
+      port: uplink-2
+    to:
+      device: spine-2
+      port: downlink-44
+    type: uplink
+  - from:
+      device: leaf-3
+      port: uplink-1
+    to:
+      device: spine-1
+      port: downlink-5
+    type: uplink
+  - from:
+      device: leaf-3
+      port: uplink-2
+    to:
+      device: spine-2
+      port: downlink-6
+    type: uplink
+  - from:
+      device: leaf-4
+      port: uplink-1
+    to:
+      device: spine-1
+      port: downlink-7
+    type: uplink
+  - from:
+      device: leaf-4
+      port: uplink-2
+    to:
+      device: spine-2
+      port: downlink-8
+    type: uplink
+  - from:
+      device: leaf-5
+      port: uplink-1
+    to:
+      device: spine-1
+      port: downlink-9
+    type: uplink
+  - from:
+      device: leaf-5
+      port: uplink-2
+    to:
+      device: spine-2
+      port: downlink-10
+    type: uplink
+  - from:
+      device: leaf-6
+      port: uplink-1
+    to:
+      device: spine-1
+      port: downlink-11
+    type: uplink
+  - from:
+      device: leaf-6
+      port: uplink-2
+    to:
+      device: spine-2
+      port: downlink-12
+    type: uplink
+  - from:
+      device: leaf-7
+      port: uplink-1
+    to:
+      device: spine-1
+      port: downlink-13
+    type: uplink
+  - from:
+      device: leaf-7
+      port: uplink-2
+    to:
+      device: spine-2
+      port: downlink-14
+    type: uplink
+  - from:
+      device: leaf-8
+      port: uplink-1
+    to:
+      device: spine-1
+      port: downlink-15
+    type: uplink
+  - from:
+      device: leaf-8
+      port: uplink-2
+    to:
+      device: spine-2
+      port: downlink-16
+    type: uplink
+  - from:
+      device: leaf-9
+      port: uplink-1
+    to:
+      device: spine-1
+      port: downlink-17
+    type: uplink
+  - from:
+      device: leaf-9
+      port: uplink-2
+    to:
+      device: spine-2
+      port: downlink-18
+    type: uplink
+metadata:
+  fabricName: large-fabric-1000
+  generatedAt: "2025-09-01T06:56:44.807Z"
+  totalConnections: 44

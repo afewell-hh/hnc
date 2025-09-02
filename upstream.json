@@ -1,0 +1,89 @@
+{
+  "$schema": "./schemas/upstream-config.schema.json",
+  "version": "1.0.0",
+  "description": "Upstream repository configuration for HNC (Hedgehog Network Configuration)",
+  "upstream": {
+    "githedgehog/docs": {
+      "url": "https://github.com/githedgehog/docs.git",
+      "ref": "HEAD",
+      "pinned_commit": "c1d4f623fe69ff934989e1d0e8c228ebe5084f0a",
+      "last_synced": "2025-09-01T00:12:20.448Z",
+      "sync_paths": [
+        "content/docs/reference/api",
+        "content/docs/reference/crds",
+        "content/docs/examples"
+      ],
+      "local_path": ".upstream/docs",
+      "description": "Official Hedgehog documentation including CRDs and API reference"
+    },
+    "githedgehog/fabricator": {
+      "url": "https://github.com/githedgehog/fabricator.git",
+      "ref": "HEAD",
+      "pinned_commit": "11a350166251acf183344fb2ea3c33594e9d94ca",
+      "last_synced": "2025-09-01T00:12:28.643Z",
+      "sync_paths": [
+        "pkg/fab/cnc/spec",
+        "pkg/fab/cnc/types",
+        "config/crd",
+        "examples"
+      ],
+      "local_path": ".upstream/fabricator",
+      "description": "Hedgehog Fabricator - Control and Configuration with CRDs and types"
+    },
+    "githedgehog/fabric": {
+      "url": "https://github.com/githedgehog/fabric.git",
+      "ref": "HEAD",
+      "pinned_commit": "87b20297ffa6d79f89b1c8e83f8303f4f111f37b",
+      "last_synced": "2025-09-01T00:12:34.556Z",
+      "sync_paths": [
+        "api/fab/v1alpha1",
+        "config/crd",
+        "pkg/api/meta",
+        "examples/fabric-configs"
+      ],
+      "local_path": ".upstream/fabric",
+      "description": "Hedgehog Fabric API definitions and examples"
+    }
+  },
+  "sync": {
+    "auto_upgrade": false,
+    "verify_signatures": false,
+    "shallow_clone": true,
+    "max_depth": 50,
+    "timeout_seconds": 300,
+    "retry_attempts": 3
+  },
+  "extraction": {
+    "crds": {
+      "enabled": true,
+      "output_path": "src/types/generated/crds",
+      "formats": [
+        "typescript",
+        "json-schema"
+      ]
+    },
+    "switch_profiles": {
+      "enabled": true,
+      "output_path": "src/fixtures/switch-profiles/upstream",
+      "sources": [
+        ".upstream/fabricator/config/switches",
+        ".upstream/fabric/examples/switch-configs"
+      ]
+    },
+    "examples": {
+      "enabled": true,
+      "output_path": "examples/upstream",
+      "filter_patterns": [
+        "*.yaml",
+        "*.yml",
+        "*.json"
+      ]
+    }
+  },
+  "metadata": {
+    "created": "2025-09-01T00:00:00.000Z",
+    "last_updated": "2025-09-01T00:12:34.557Z",
+    "hnc_version": "0.5.0-alpha",
+    "purpose": "Track ONF truth from upstream githedgehog repositories for CRD extraction and validation"
+  }
+}

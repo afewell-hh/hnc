@@ -1,0 +1,28 @@
+metadata:
+  generatedAt: "2025-09-01T06:56:44.799Z"
+  totalServers: 8
+servers:
+  - connections: 2
+    id: server-1
+    type: Multi-Class Server
+  - connections: 2
+    id: server-2
+    type: Multi-Class Server
+  - connections: 2
+    id: server-3
+    type: Multi-Class Server
+  - connections: 2
+    id: server-4
+    type: Multi-Class Server
+  - connections: 2
+    id: server-5
+    type: Multi-Class Server
+  - connections: 2
+    id: server-6
+    type: Multi-Class Server
+  - connections: 2
+    id: server-7
+    type: Multi-Class Server
+  - connections: 2
+    id: server-8
+    type: Multi-Class Server

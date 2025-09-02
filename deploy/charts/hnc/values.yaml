@@ -1,0 +1,280 @@
+# Default values for HNC
+# This is a YAML-formatted file.
+
+# Application configuration
+app:
+  name: hnc
+  version: "0.4.0-alpha"
+  # Deployment environment (dev, staging, prod)
+  environment: dev
+  # HOSS cluster configuration
+  cluster:
+    type: hoss
+    name: ops-cluster
+    # Separate from ONF controller
+    isolation: true
+
+# Image configuration
+image:
+  repository: ghcr.io/afewell/hnc
+  tag: "0.4.0-alpha"
+  pullPolicy: IfNotPresent
+  # Pull secrets for private registries
+  pullSecrets: []
+
+# Service account
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# Deployment configuration
+replicaCount: 1
+
+# Container resources
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 80
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+  hosts:
+    - host: hnc.hoss.local
+      paths:
+        - path: /
+          pathType: Prefix
+    - host: hnc-ops.hedgehog.fabric
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: hnc-tls-cert
+      hosts:
+        - hnc.hoss.local
+        - hnc-ops.hedgehog.fabric
+
+# Environment configuration - Feature Flags
+env:
+  # === Core Configuration ===
+  HNC_VERBOSE: "false"
+  NODE_ENV: "production"
+  PORT: "80"
+  
+  # === Feature Flags - Enable/disable major functionality ===
+  FEATURE_GIT: "true"
+  FEATURE_K8S: "true"
+  FEATURE_HHFAB: "true"
+  FEATURE_GH_PR: "false"
+  FEATURE_VALIDATION: "true"
+  FEATURE_PERSISTENCE: "true"
+  FEATURE_MONITORING: "true"
+  
+  # === GitHub Integration (configured via secrets) ===
+  # GITHUB_TOKEN: configured via secret
+  GIT_REMOTE: "origin"
+  GITHUB_OWNER: "afewell"
+  GITHUB_REPO: "hnc"
+  
+  # === Kubernetes Integration ===
+  # KUBECONFIG: handled by service account
+  K8S_NAMESPACE: "hnc"
+  K8S_CLUSTER_NAME: "hoss-ops"
+  
+  # === Validation Configuration ===
+  HHFAB: "/usr/local/bin/hhfab"
+  HHFAB_CONFIG: "/etc/hhfab/config.yaml"
+  
+  # === Persistence Configuration ===
+  DATA_DIR: "/app/data"
+  CONFIG_DIR: "/app/config"
+  CACHE_DIR: "/app/cache"
+  
+  # === Test Configuration ===
+  TEST_FGD_FILE: "test-output/test-fabric.yaml"
+  TEST_K8S_NAMESPACE: "hnc-test"
+  TEST_TIMEOUT: "30000"
+  
+  # === Performance Tuning ===
+  PLAYWRIGHT_MAX_WORKERS: "1"
+  VITEST_MAX_WORKERS: "4"
+  MAX_CONCURRENT_VALIDATIONS: "3"
+  CACHE_TTL: "3600"
+  
+  # === Monitoring & Observability ===
+  METRICS_ENABLED: "true"
+  METRICS_PORT: "9090"
+  HEALTH_CHECK_PATH: "/health"
+  LOG_LEVEL: "info"
+  LOG_FORMAT: "json"
+
+# Secrets configuration (for sensitive data like tokens)
+secrets:
+  github:
+    enabled: false
+    # If enabled, create a secret with the GitHub token
+    # The secret will be mounted as environment variables
+    token: ""
+    # Alternative: reference existing secret
+    existingSecret: ""
+    existingSecretKey: "token"
+  
+  # Additional secrets for enterprise features
+  kubeconfig:
+    enabled: false
+    # Custom kubeconfig for multi-cluster scenarios
+    config: ""
+    existingSecret: ""
+    existingSecretKey: "config"
+  
+  # TLS certificates
+  tls:
+    enabled: false
+    # Custom TLS certificates
+    cert: ""
+    key: ""
+    existingSecret: ""
+    certKey: "tls.crt"
+    keyKey: "tls.key"
+
+# ConfigMap for static files or configuration
+configMap:
+  # Mount additional configuration files if needed
+  enabled: false
+  data: {}
+
+# Health checks
+healthCheck:
+  enabled: true
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: http
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: http
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+  startupProbe:
+    httpGet:
+      path: /health
+      port: http
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 1
+    failureThreshold: 30
+
+# Pod security context
+podSecurityContext:
+  fsGroup: 2000
+
+# Container security context
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+
+# Node selector
+nodeSelector: {}
+
+# Tolerations
+tolerations: []
+
+# Affinity
+affinity: {}
+
+# Autoscaling (disabled by default for single-node k3s)
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+  # Custom metrics (if using custom metrics API)
+  customMetrics: []
+  # Scaling policies
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 10
+        periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 15
+
+# Pod disruption budget
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+
+# Persistence (for storing generated configurations)
+persistence:
+  enabled: true
+  storageClass: "local-path"
+  accessMode: ReadWriteOnce
+  size: 5Gi
+  mountPath: /app/data
+  # Annotations for storage
+  annotations: {}
+  # Selector for existing PV
+  selector: {}
+  # Data source (for cloning)
+  dataSource: {}
+
+# Init containers (for setup tasks)
+initContainers: []
+
+# Sidecar containers
+sidecars: []
+
+# Additional volumes
+extraVolumes: []
+
+# Additional volume mounts
+extraVolumeMounts: []
+
+# Pod annotations
+podAnnotations: {}
+
+# Pod labels
+podLabels: {}
+
+# Service annotations
+serviceAnnotations: {}
+
+# Deployment annotations
+deploymentAnnotations: {}

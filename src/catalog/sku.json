@@ -1,0 +1,216 @@
+{
+  "switches": {
+    "GEN-DS2000-48X25G": {
+      "description": "Dell DS2000 48x25G + 8x100G ToR Switch", 
+      "ports": {
+        "25G": 48,
+        "100G": 8
+      },
+      "totalPorts": 56,
+      "price": 8500.00,
+      "category": "switch",
+      "type": "leaf",
+      "breakoutSupport": true
+    },
+    "GEN-DS3000-32X100G": {
+      "description": "Dell DS3000 32x100G High-Density Switch",
+      "ports": {
+        "100G": 32,
+        "400G": 4
+      }, 
+      "totalPorts": 36,
+      "price": 15500.00,
+      "category": "switch",
+      "type": "spine",
+      "breakoutSupport": true
+    },
+    "GEN-DS4000-32X400G": {
+      "description": "Dell DS4000 32x400G Spine/Super-ToR Switch",
+      "ports": {
+        "400G": 32,
+        "100G": 8
+      },
+      "totalPorts": 40, 
+      "price": 45000.00,
+      "category": "switch",
+      "type": "spine",
+      "breakoutSupport": true
+    }
+  },
+  "transceivers": {
+    "GEN-SFP28-25G-SR": {
+      "description": "25G SFP28 SR Transceiver (850nm, 100m)",
+      "speed": "25G",
+      "form": "SFP28",
+      "reach": "100m",
+      "medium": "fiber",
+      "price": 45.00,
+      "category": "transceiver"
+    },
+    "GEN-SFP28-25G-LR": {
+      "description": "25G SFP28 LR Transceiver (1310nm, 10km)",
+      "speed": "25G", 
+      "form": "SFP28",
+      "reach": "10km",
+      "medium": "fiber",
+      "price": 120.00,
+      "category": "transceiver"
+    },
+    "GEN-SFP28-25G-DAC": {
+      "description": "25G SFP28 DAC Cable (3m)",
+      "speed": "25G",
+      "form": "SFP28-DAC",
+      "reach": "3m",
+      "medium": "dac",
+      "price": 25.00,
+      "category": "transceiver"
+    },
+    "GEN-QSFP28-100G-SR4": {
+      "description": "100G QSFP28 SR4 Transceiver (850nm, 100m)",
+      "speed": "100G",
+      "form": "QSFP28",
+      "reach": "100m", 
+      "medium": "fiber",
+      "price": 180.00,
+      "category": "transceiver"
+    },
+    "GEN-QSFP28-100G-LR4": {
+      "description": "100G QSFP28 LR4 Transceiver (1310nm, 10km)",
+      "speed": "100G",
+      "form": "QSFP28",
+      "reach": "10km",
+      "medium": "fiber", 
+      "price": 350.00,
+      "category": "transceiver"
+    },
+    "GEN-QSFP28-100G-DAC": {
+      "description": "100G QSFP28 DAC Cable (3m)",
+      "speed": "100G",
+      "form": "QSFP28-DAC",
+      "reach": "3m",
+      "medium": "dac",
+      "price": 85.00,
+      "category": "transceiver"
+    },
+    "GEN-QSFP-DD-400G-SR8": {
+      "description": "400G QSFP-DD SR8 Transceiver (850nm, 100m)",
+      "speed": "400G",
+      "form": "QSFP-DD", 
+      "reach": "100m",
+      "medium": "fiber",
+      "price": 850.00,
+      "category": "transceiver"
+    },
+    "GEN-QSFP-DD-400G-LR8": {
+      "description": "400G QSFP-DD LR8 Transceiver (1310nm, 10km)", 
+      "speed": "400G",
+      "form": "QSFP-DD",
+      "reach": "10km",
+      "medium": "fiber",
+      "price": 1200.00,
+      "category": "transceiver"
+    },
+    "GEN-QSFP-DD-400G-DAC": {
+      "description": "400G QSFP-DD DAC Cable (3m)",
+      "speed": "400G",
+      "form": "QSFP-DD-DAC",
+      "reach": "3m",
+      "medium": "dac",
+      "price": 380.00,
+      "category": "transceiver"
+    }
+  },
+  "breakouts": {
+    "GEN-QSFP28-4X25G-DAC": {
+      "description": "100G to 4x25G Breakout DAC Cable (3m)",
+      "parentSpeed": "100G",
+      "childSpeed": "25G",
+      "childCount": 4,
+      "length": "3m",
+      "medium": "dac",
+      "price": 45.00,
+      "category": "breakout"
+    },
+    "GEN-QSFP28-4X25G-AOC": {
+      "description": "100G to 4x25G Breakout AOC Cable (10m)",
+      "parentSpeed": "100G", 
+      "childSpeed": "25G",
+      "childCount": 4,
+      "length": "10m",
+      "medium": "aoc",
+      "price": 120.00,
+      "category": "breakout"
+    },
+    "GEN-QSFP-DD-4X100G-DAC": {
+      "description": "400G to 4x100G Breakout DAC Cable (3m)",
+      "parentSpeed": "400G",
+      "childSpeed": "100G", 
+      "childCount": 4,
+      "length": "3m",
+      "medium": "dac",
+      "price": 180.00,
+      "category": "breakout"
+    },
+    "GEN-QSFP-DD-8X25G-DAC": {
+      "description": "400G to 8x25G Breakout DAC Cable (3m)",
+      "parentSpeed": "400G",
+      "childSpeed": "25G",
+      "childCount": 8,
+      "length": "3m", 
+      "medium": "dac",
+      "price": 180.00,
+      "category": "breakout"
+    },
+    "GEN-QSFP-DD-16X25G-AOC": {
+      "description": "400G to 16x25G Breakout AOC Cable (10m)",
+      "parentSpeed": "400G",
+      "childSpeed": "25G",
+      "childCount": 16,
+      "length": "10m",
+      "medium": "aoc", 
+      "price": 420.00,
+      "category": "breakout"
+    }
+  },
+  "cables": {
+    "GEN-CAT6A-1M": {
+      "description": "Cat 6A Ethernet Cable (1m)",
+      "speed": "10G",
+      "length": "1m",
+      "medium": "copper",
+      "price": 8.00,
+      "category": "cable"
+    },
+    "GEN-CAT6A-3M": {
+      "description": "Cat 6A Ethernet Cable (3m)",
+      "speed": "10G", 
+      "length": "3m",
+      "medium": "copper",
+      "price": 12.00,
+      "category": "cable"
+    },
+    "GEN-OM4-LC-3M": {
+      "description": "OM4 Fiber LC-LC Duplex Cable (3m)",
+      "speed": "100G",
+      "length": "3m", 
+      "medium": "fiber",
+      "price": 15.00,
+      "category": "cable"
+    },
+    "GEN-OM4-LC-10M": {
+      "description": "OM4 Fiber LC-LC Duplex Cable (10m)",
+      "speed": "100G",
+      "length": "10m",
+      "medium": "fiber", 
+      "price": 25.00,
+      "category": "cable"
+    }
+  },
+  "metadata": {
+    "version": "1.0.0",
+    "lastUpdated": "2025-09-02T00:00:00Z",
+    "description": "Generic SKU catalog for HNC BOM compilation",
+    "vendor": "Generic Hardware Corp",
+    "currency": "USD"
+  }
+}

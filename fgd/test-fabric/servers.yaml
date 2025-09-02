@@ -1,0 +1,7 @@
+metadata:
+  generatedAt: "2025-09-01T06:56:44.741Z"
+  totalServers: 1
+servers:
+  - connections: 1
+    id: srv-default-server-1
+    type: server

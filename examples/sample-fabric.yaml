@@ -1,0 +1,78 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fabric-config
+  namespace: hnc-it-test-123
+  labels:
+    hncRunId: test-123
+    component: fabric-config
+    app: hnc-fabric
+data:
+  fabric.yaml: |
+    # HNC Generated Fabric Configuration
+    apiVersion: fabric.hnc.io/v1
+    kind: Fabric
+    metadata:
+      name: test-fabric
+    spec:
+      topology:
+        spine:
+          model: DS3000
+          count: 2
+        leaf:
+          model: DS2000
+          count: 4
+      connections:
+        uplinksPerLeaf: 2
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fabric-controller
+  namespace: hnc-it-test-123
+  labels:
+    hncRunId: test-123
+    component: fabric-controller
+    app: hnc-fabric
+spec:
+  selector:
+    app: fabric-controller
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080
+  - name: grpc
+    port: 9090
+    targetPort: 9090
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fabric-controller
+  namespace: hnc-it-test-123
+  labels:
+    hncRunId: test-123
+    component: fabric-controller
+    app: hnc-fabric
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fabric-controller
+  template:
+    metadata:
+      labels:
+        app: fabric-controller
+    spec:
+      containers:
+      - name: controller
+        image: hnc/fabric-controller:latest
+        ports:
+        - containerPort: 8080
+        - containerPort: 9090
+        env:
+        - name: FABRIC_CONFIG
+          valueFrom:
+            configMapKeyRef:
+              name: fabric-config
+              key: fabric.yaml

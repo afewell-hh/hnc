@@ -1,0 +1,164 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: hnc
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: hnc
+    app.kubernetes.io/component: application
+    app.kubernetes.io/part-of: hnc
+    app.kubernetes.io/managed-by: argocd
+    environment: ops
+    cluster-type: hoss
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+    argocd.argoproj.io/compare-options: ServerSideDiff=true
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/afewell/hnc
+    targetRevision: HEAD
+    path: deploy/charts/hnc
+    helm:
+      valueFiles:
+        - values.yaml
+        # Uncomment for production deployment
+        # - values-prod.yaml
+      values: |
+        # HOSS Ops Cluster Configuration
+        app:
+          environment: ops
+          cluster:
+            type: hoss
+            name: ops-cluster
+            isolation: true
+        
+        # HNC Docker image configuration
+        image:
+          repository: ghcr.io/afewell/hnc
+          tag: "0.4.0-alpha"
+          pullPolicy: IfNotPresent
+        
+        # Ingress configuration for HOSS
+        ingress:
+          enabled: true
+          className: "nginx"
+          annotations:
+            nginx.ingress.kubernetes.io/ssl-redirect: "false"
+            nginx.ingress.kubernetes.io/rewrite-target: /
+          hosts:
+            - host: hnc.hoss.local
+              paths:
+                - path: /
+                  pathType: Prefix
+            - host: hnc.k3s.local
+              paths:
+                - path: /
+                  pathType: Prefix
+          # TLS can be enabled with cert-manager
+          # tls:
+          #   - secretName: hnc-tls-cert
+          #     hosts:
+          #       - hnc.hoss.local
+        
+        # Feature flags - Environment-driven configuration
+        env:
+          # Core features
+          HNC_VERBOSE: "false"
+          NODE_ENV: "production"
+          
+          # Feature flags (can be overridden via env vars)
+          FEATURE_GIT: "true"
+          FEATURE_K8S: "true"
+          FEATURE_HHFAB: "true"
+          FEATURE_GH_PR: "false"
+          FEATURE_VALIDATION: "true"
+          FEATURE_PERSISTENCE: "true"
+          FEATURE_MONITORING: "true"
+          
+          # HOSS-specific configuration
+          K8S_CLUSTER_NAME: "hoss-ops"
+          K8S_NAMESPACE: "hnc"
+          
+          # GitHub integration (tokens via secrets)
+          GITHUB_OWNER: "afewell"
+          GITHUB_REPO: "hnc"
+          GIT_REMOTE: "origin"
+        
+        # Resource configuration for ops cluster
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        
+        # Persistence for generated configurations
+        persistence:
+          enabled: true
+          size: 5Gi
+          storageClass: "local-path"
+          mountPath: /app/data
+        
+        # Health checks
+        healthCheck:
+          enabled: true
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+        
+        # Security context
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        
+        # GitHub secrets (create manually)
+        secrets:
+          github:
+            enabled: false
+            # Set to true and configure for GitHub integration
+            # existingSecret: "hnc-github-token"
+            # existingSecretKey: "token"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: hnc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+      - RespectIgnoreDifferences=true
+      - ServerSideApply=true
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  revisionHistoryLimit: 5
+  info:
+    - name: Description
+      value: HNC application deployment for HOSS ops cluster
+    - name: Environment
+      value: ops
+    - name: Cluster
+      value: hoss-ops

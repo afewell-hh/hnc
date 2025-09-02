@@ -1,0 +1,28 @@
+metadata:
+  generatedAt: "2025-09-02T10:00:53.187Z"
+  totalServers: 8
+servers:
+  - connections: 2
+    id: srv-default-standardserver-1
+    type: server
+  - connections: 2
+    id: srv-default-standardserver-2
+    type: server
+  - connections: 2
+    id: srv-default-standardserver-3
+    type: server
+  - connections: 2
+    id: srv-default-standardserver-4
+    type: server
+  - connections: 2
+    id: srv-default-standardserver-5
+    type: server
+  - connections: 2
+    id: srv-default-standardserver-6
+    type: server
+  - connections: 2
+    id: srv-default-standardserver-7
+    type: server
+  - connections: 2
+    id: srv-default-standardserver-8
+    type: server

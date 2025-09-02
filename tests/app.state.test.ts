@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { computeLeavesNeeded, computeSpinesNeeded, computeOversubscription, validateFabricSpec, generateWiringStub } from '../src/app.state'
 import { computeDerived } from '../src/domain/topology'
-import type { FabricSpec } from '../src/app.state'
+import type { FabricSpec } from '../src/app.types'
 
 describe('App State Pure Functions', () => {
   describe('computeLeavesNeeded', () => {
@@ -58,7 +58,7 @@ describe('App State Pure Functions', () => {
         name: '',
         uplinksPerLeaf: 3, // Odd number
         endpointCount: 0
-      }
+      } as any // Using any since we're testing invalid input
       
       const result = validateFabricSpec(invalidSpec)
       expect(result.isValid).toBe(false)
@@ -69,7 +69,7 @@ describe('App State Pure Functions', () => {
 
   describe('generateWiringStub', () => {
     it('should generate wiring stub for valid topology', () => {
-      const validSpec: FabricSpec = {
+      const validSpec = {
         name: 'test-fabric',
         spineModelId: 'DS3000',
         leafModelId: 'DS2000',
@@ -79,7 +79,7 @@ describe('App State Pure Functions', () => {
           portsPerEndpoint: 2
         },
         endpointCount: 2
-      }
+      } as FabricSpec
       
       const topology = computeDerived(validSpec)
       const wiring = generateWiringStub(validSpec, topology)
@@ -92,7 +92,7 @@ describe('App State Pure Functions', () => {
     })
 
     it('should generate correct device IDs and models', () => {
-      const validSpec: FabricSpec = {
+      const validSpec = {
         name: 'test-fabric',
         spineModelId: 'DS3000',
         leafModelId: 'DS2000',
@@ -102,7 +102,7 @@ describe('App State Pure Functions', () => {
           portsPerEndpoint: 2
         },
         endpointCount: 1
-      }
+      } as FabricSpec
       
       const topology = computeDerived(validSpec)
       const wiring = generateWiringStub(validSpec, topology)
@@ -115,7 +115,7 @@ describe('App State Pure Functions', () => {
     })
 
     it('should create connections between devices', () => {
-      const validSpec: FabricSpec = {
+      const validSpec = {
         name: 'test-fabric',
         spineModelId: 'DS3000',
         leafModelId: 'DS2000',
@@ -125,7 +125,7 @@ describe('App State Pure Functions', () => {
           portsPerEndpoint: 2
         },
         endpointCount: 4
-      }
+      } as FabricSpec
       
       const topology = computeDerived(validSpec)
       const wiring = generateWiringStub(validSpec, topology)
@@ -144,7 +144,7 @@ describe('App State Pure Functions', () => {
 
   describe('Integration - Domain and State Functions', () => {
     it('should work together for end-to-end topology computation', () => {
-      const spec: FabricSpec = {
+      const spec = {
         name: 'integration-test',
         spineModelId: 'DS3000',
         leafModelId: 'DS2000',
@@ -154,7 +154,7 @@ describe('App State Pure Functions', () => {
           portsPerEndpoint: 2
         },
         endpointCount: 8
-      }
+      } as FabricSpec
       
       // Validate the spec
       const validation = validateFabricSpec(spec)
@@ -176,7 +176,7 @@ describe('App State Pure Functions', () => {
     })
 
     it('should handle complex topology with multiple spines', () => {
-      const spec: FabricSpec = {
+      const spec = {
         name: 'complex-test',
         spineModelId: 'DS3000',
         leafModelId: 'DS2000',
@@ -186,7 +186,7 @@ describe('App State Pure Functions', () => {
           portsPerEndpoint: 1
         },
         endpointCount: 16 // Keep reasonable for test
-      }
+      } as FabricSpec
       
       const validation = validateFabricSpec(spec)
       expect(validation.isValid).toBe(true)

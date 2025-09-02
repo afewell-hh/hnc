@@ -1,3 +1,4 @@
+import path from 'node:path'
 import type { StorybookConfig } from '@storybook/react-vite'
 
 const config: StorybookConfig = {
@@ -12,6 +13,14 @@ const config: StorybookConfig = {
   },
   typescript: {
     reactDocgen: 'react-docgen-typescript',
+  },
+  viteFinal: async (cfg) => {
+    cfg.resolve = cfg.resolve || {}
+    cfg.resolve.alias = {
+      ...(cfg.resolve.alias || {}),
+      '@': path.resolve(__dirname, '../src'),
+    }
+    return cfg
   },
 }
 

@@ -1,6 +1,7 @@
 import React from 'react'
 import { useMachine } from '@xstate/react'
 import { fabricDesignMachine } from './app.machine'
+import type { FabricDesignContext } from './app.types'
 
 export const FabricDesignView: React.FC = () => {
   const [state, send] = useMachine(fabricDesignMachine, {})
@@ -11,7 +12,7 @@ export const FabricDesignView: React.FC = () => {
   const handleSaveToFgd = () => send({ type: 'SAVE_TO_FGD' })
   const handleReset = () => send({ type: 'RESET' })
 
-  const { config, computedTopology, errors, savedToFgd } = state.context
+  const { config, computedTopology, errors, savedToFgd } = state.context as FabricDesignContext
   const currentState = String(state.value)
 
   return (

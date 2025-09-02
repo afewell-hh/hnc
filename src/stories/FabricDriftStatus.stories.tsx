@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react'
 import { DriftIndicator } from '../drift/DriftIndicator.js'
-import { DriftSection } from '../drift/DriftSection.js'
+import { DriftSection } from '../ui/DriftSection'
 import { DriftBadge } from '../drift/DriftBadge.js'
 import { DriftListView } from '../drift/DriftListView.js'
 import type { DriftStatus } from '../drift/types.js'

@@ -1,0 +1,4 @@
+# Ignore all secrets files
+*
+# But track this gitignore
+!.gitignore

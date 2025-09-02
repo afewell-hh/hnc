@@ -1,0 +1,12 @@
+metadata:
+  generatedAt: "2025-09-02T10:00:53.253Z"
+  totalSwitches: 2
+switches:
+  - id: leaf-1
+    model: DS2000
+    ports: 4
+    type: leaf
+  - id: spine-1
+    model: DS3000
+    ports: 16
+    type: spine

@@ -1,0 +1,70 @@
+---
+apiVersion: wiring.githedgehog.com/v1beta1
+kind: Switch
+metadata:
+  name: "spine-1"
+  namespace: "default"
+  labels:
+    app.kubernetes.io/name: "hnc-switch"
+    app.kubernetes.io/component: "network-switch"
+    hnc.githedgehog.com/role: "spine"
+    hnc.githedgehog.com/model: "DS3000"
+spec:
+  role: "spine"
+  profile: "ds3000-profile"
+  hncMetadata:
+    fabricRole: "spine"
+    downlinkPorts: 32
+---
+apiVersion: wiring.githedgehog.com/v1beta1
+kind: Switch
+metadata:
+  name: "spine-2"
+  namespace: "default"
+  labels:
+    app.kubernetes.io/name: "hnc-switch"
+    app.kubernetes.io/component: "network-switch"
+    hnc.githedgehog.com/role: "spine"
+    hnc.githedgehog.com/model: "DS3000"
+spec:
+  role: "spine"
+  profile: "ds3000-profile"
+  hncMetadata:
+    fabricRole: "spine"
+    downlinkPorts: 32
+---
+apiVersion: wiring.githedgehog.com/v1beta1
+kind: Switch
+metadata:
+  name: "leaf-1"
+  namespace: "default"
+  labels:
+    app.kubernetes.io/name: "hnc-switch"
+    app.kubernetes.io/component: "network-switch"
+    hnc.githedgehog.com/role: "leaf"
+    hnc.githedgehog.com/model: "DS2000"
+spec:
+  role: "leaf"
+  profile: "ds2000-profile"
+  hncMetadata:
+    fabricRole: "leaf"
+    uplinkPorts: 4
+    endpointPorts: 44
+---
+apiVersion: wiring.githedgehog.com/v1beta1
+kind: Switch
+metadata:
+  name: "leaf-2"
+  namespace: "default"
+  labels:
+    app.kubernetes.io/name: "hnc-switch"
+    app.kubernetes.io/component: "network-switch"
+    hnc.githedgehog.com/role: "leaf"
+    hnc.githedgehog.com/model: "DS2000"
+spec:
+  role: "leaf"
+  profile: "ds2000-profile"
+  hncMetadata:
+    fabricRole: "leaf"
+    uplinkPorts: 4
+    endpointPorts: 44

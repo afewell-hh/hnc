@@ -1,0 +1,49 @@
+{{- if .Values.configMap.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "hnc.fullname" . }}-config
+  labels:
+    {{- include "hnc.labels" . | nindent 4 }}
+data:
+  {{- with .Values.configMap.data }}
+  {{- toYaml . | nindent 2 }}
+  {{- end }}
+{{- end }}
+
+---
+# Environment configuration ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "hnc.fullname" . }}-env
+  labels:
+    {{- include "hnc.labels" . | nindent 4 }}
+data:
+  # Core Configuration
+  HNC_VERBOSE: {{ .Values.env.HNC_VERBOSE | quote }}
+  
+  # Feature Flags
+  FEATURE_GIT: {{ .Values.env.FEATURE_GIT | quote }}
+  FEATURE_K8S: {{ .Values.env.FEATURE_K8S | quote }}
+  FEATURE_HHFAB: {{ .Values.env.FEATURE_HHFAB | quote }}
+  FEATURE_GH_PR: {{ .Values.env.FEATURE_GH_PR | quote }}
+  
+  # Integration Configuration
+  GIT_REMOTE: {{ .Values.env.GIT_REMOTE | quote }}
+  HHFAB: {{ .Values.env.HHFAB | quote }}
+  
+  # Test Configuration
+  TEST_FGD_FILE: {{ .Values.env.TEST_FGD_FILE | quote }}
+  TEST_K8S_NAMESPACE: {{ .Values.env.TEST_K8S_NAMESPACE | quote }}
+  
+  # Performance Configuration
+  PLAYWRIGHT_MAX_WORKERS: {{ .Values.env.PLAYWRIGHT_MAX_WORKERS | quote }}
+  VITEST_MAX_WORKERS: {{ .Values.env.VITEST_MAX_WORKERS | quote }}
+  
+  # Kubernetes configuration (if not using secrets)
+  {{- if not .Values.secrets.github.enabled }}
+  {{- if .Values.env.KUBECONFIG }}
+  KUBECONFIG: {{ .Values.env.KUBECONFIG | quote }}
+  {{- end }}
+  {{- end }}

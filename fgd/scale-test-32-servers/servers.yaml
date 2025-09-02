@@ -1,0 +1,100 @@
+metadata:
+  generatedAt: "2025-09-02T10:00:53.253Z"
+  totalServers: 32
+servers:
+  - connections: 2
+    id: srv-default-standardserver-1
+    type: server
+  - connections: 2
+    id: srv-default-standardserver-10
+    type: server
+  - connections: 2
+    id: srv-default-standardserver-11
+    type: server
+  - connections: 2
+    id: srv-default-standardserver-12
+    type: server
+  - connections: 2
+    id: srv-default-standardserver-13
+    type: server
+  - connections: 2
+    id: srv-default-standardserver-14
+    type: server
+  - connections: 2
+    id: srv-default-standardserver-15
+    type: server
+  - connections: 2
+    id: srv-default-standardserver-16
+    type: server
+  - connections: 2
+    id: srv-default-standardserver-17
+    type: server
+  - connections: 2
+    id: srv-default-standardserver-18
+    type: server
+  - connections: 2
+    id: srv-default-standardserver-19
+    type: server
+  - connections: 2
+    id: srv-default-standardserver-2
+    type: server
+  - connections: 2
+    id: srv-default-standardserver-20
+    type: server
+  - connections: 2
+    id: srv-default-standardserver-21
+    type: server
+  - connections: 2
+    id: srv-default-standardserver-22
+    type: server
+  - connections: 2
+    id: srv-default-standardserver-23
+    type: server
+  - connections: 2
+    id: srv-default-standardserver-24
+    type: server
+  - connections: 2
+    id: srv-default-standardserver-25
+    type: server
+  - connections: 2
+    id: srv-default-standardserver-26
+    type: server
+  - connections: 2
+    id: srv-default-standardserver-27
+    type: server
+  - connections: 2
+    id: srv-default-standardserver-28
+    type: server
+  - connections: 2
+    id: srv-default-standardserver-29
+    type: server
+  - connections: 2
+    id: srv-default-standardserver-3
+    type: server
+  - connections: 2
+    id: srv-default-standardserver-30
+    type: server
+  - connections: 2
+    id: srv-default-standardserver-31
+    type: server
+  - connections: 2
+    id: srv-default-standardserver-32
+    type: server
+  - connections: 2
+    id: srv-default-standardserver-4
+    type: server
+  - connections: 2
+    id: srv-default-standardserver-5
+    type: server
+  - connections: 2
+    id: srv-default-standardserver-6
+    type: server
+  - connections: 2
+    id: srv-default-standardserver-7
+    type: server
+  - connections: 2
+    id: srv-default-standardserver-8
+    type: server
+  - connections: 2
+    id: srv-default-standardserver-9
+    type: server

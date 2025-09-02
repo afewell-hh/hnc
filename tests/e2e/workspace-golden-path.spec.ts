@@ -15,6 +15,20 @@ test.describe('HNC v0.2 Multi-Fabric Workspace', () => {
     
     // Verify app loads
     await expect(page).toHaveTitle(/HNC/)
+    
+    // Clear any existing fabrics for clean test state
+    // Check if there are any existing fabrics and delete them
+    const existingFabrics = page.locator('[data-testid="fabric-card"]')
+    const count = await existingFabrics.count()
+    for (let i = 0; i < count; i++) {
+      const deleteButton = existingFabrics.nth(0).getByRole('button', { name: 'Delete' })
+      if (await deleteButton.isVisible()) {
+        // Handle confirmation dialog
+        page.on('dialog', dialog => dialog.accept())
+        await deleteButton.click()
+        await page.waitForTimeout(100) // Brief wait for deletion
+      }
+    }
   })
 
   test('Golden Path: Complete Multi-Fabric Workflow', async ({ page }) => {
@@ -58,31 +72,31 @@ test.describe('HNC v0.2 Multi-Fabric Workspace', () => {
     await selectButtons.first().click()
     
     // Should navigate to fabric designer
-    await expect(page.getByText('HNC Fabric Designer v0.2')).toBeVisible()
+    await expect(page.getByText(/HNC Fabric Designer/)).toBeVisible()
     await expect(page.getByText('← Back to List')).toBeVisible()
     
     // Should show the fabric name in the input
-    const fabricNameInput = page.getByLabel(/fabric name/i)
+    const fabricNameInput = page.getByTestId('fabric-name-input')
     await expect(fabricNameInput).toHaveValue('Production Network')
 
     // === Phase 5: Configure Fabric ===
     // Verify default values
-    await expect(page.getByLabel(/spine model/i)).toHaveValue('DS3000')
-    await expect(page.getByLabel(/leaf model/i)).toHaveValue('DS2000')
-    await expect(page.getByLabel(/uplinks per leaf/i)).toHaveValue('2')
-    await expect(page.getByLabel(/endpoint count/i)).toHaveValue('48')
+    await expect(page.getByTestId('spine-model-select')).toHaveValue('DS3000')
+    await expect(page.getByTestId('leaf-model-select')).toHaveValue('DS2000')
+    await expect(page.getByTestId('uplinks-per-leaf-input')).toHaveValue('2')
+    await expect(page.getByTestId('endpoint-count-input')).toHaveValue('48')
     
     // Modify configuration
-    const endpointInput = page.getByLabel(/endpoint count/i)
+    const endpointInput = page.getByTestId('endpoint-count-input')
     await endpointInput.clear()
     await endpointInput.fill('24')
     
-    const uplinksInput = page.getByLabel(/uplinks per leaf/i)
+    const uplinksInput = page.getByTestId('uplinks-per-leaf-input')
     await uplinksInput.clear()
     await uplinksInput.fill('4')
 
     // === Phase 6: Compute Topology ===
-    const computeButton = page.getByText('Compute Topology')
+    const computeButton = page.getByTestId('compute-topology-button')
     await expect(computeButton).toBeEnabled()
     await computeButton.click()
     
@@ -119,9 +133,9 @@ test.describe('HNC v0.2 Multi-Fabric Workspace', () => {
     const devSelectButton = page.getByRole('button', { name: 'Select' }).last()
     await devSelectButton.click()
     
-    await expect(page.getByText('HNC Fabric Designer v0.2')).toBeVisible()
+    await expect(page.getByText(/HNC Fabric Designer/)).toBeVisible()
     
-    const devNameInput = page.getByLabel(/fabric name/i)
+    const devNameInput = page.getByTestId('fabric-name-input')
     await expect(devNameInput).toHaveValue('Development Environment')
     
     // Navigate back
@@ -187,11 +201,11 @@ test.describe('HNC v0.2 Multi-Fabric Workspace', () => {
     await page.getByRole('button', { name: 'Select' }).click()
     
     // Test invalid uplinks (should be 1-4)
-    const uplinksInput = page.getByLabel(/uplinks per leaf/i)
+    const uplinksInput = page.getByTestId('uplinks-per-leaf-input')
     await uplinksInput.clear()
     await uplinksInput.fill('5')
     
-    await page.getByText('Compute Topology').click()
+    await page.getByTestId('compute-topology-button').click()
     
     // Should show validation error
     await expect(page.getByText(/uplinks per leaf must be/i)).toBeVisible()
@@ -200,11 +214,11 @@ test.describe('HNC v0.2 Multi-Fabric Workspace', () => {
     await uplinksInput.clear()
     await uplinksInput.fill('2')
     
-    const endpointInput = page.getByLabel(/endpoint count/i)
+    const endpointInput = page.getByTestId('endpoint-count-input')
     await endpointInput.clear()
     await endpointInput.fill('0')
     
-    await page.getByText('Compute Topology').click()
+    await page.getByTestId('compute-topology-button').click()
     
     // Should show validation error
     await expect(page.getByText(/endpoint count must be/i)).toBeVisible()
@@ -229,7 +243,7 @@ test.describe('HNC v0.2 Multi-Fabric Workspace', () => {
       await selectButtons.nth(i).click()
       
       // Should load designer quickly
-      await expect(page.getByText('HNC Fabric Designer v0.2')).toBeVisible()
+      await expect(page.getByText(/HNC Fabric Designer/)).toBeVisible()
       
       // Navigate back
       await page.getByText('← Back to List').click()
