@@ -1,5 +1,55 @@
 import { vi } from 'vitest'
 import '@testing-library/jest-dom'
+import '@testing-library/jest-dom/vitest'
+import { TextEncoder, TextDecoder } from 'util'
+import { webcrypto } from 'crypto'
+
+// Test taxonomy tags for categorization
+export const TEST_TAGS = {
+  CORE: '@core',
+  INTEGRATION: '@integration', 
+  FLAKY: '@flaky'
+} as const;
+
+// Helper to check if test should be in core suite
+export const isCoreTest = (filePath: string): boolean => {
+  // Core tests: unit tests, property tests, storybook play tests, golden-path E2E
+  const corePatterns = [
+    /\.test\.(ts|tsx)$/,
+    /\.spec\.(ts|tsx)$/,
+    /property.*test/,
+    /\.stories\.test/,
+    /golden.*path/,
+    /smoke.*storybook/
+  ];
+  
+  const integrationPatterns = [
+    /integration/,
+    /github/,
+    /k8s/,
+    /drift/,
+    /features/
+  ];
+  
+  // Exclude integration patterns from core
+  if (integrationPatterns.some(pattern => pattern.test(filePath))) {
+    return false;
+  }
+  
+  return corePatterns.some(pattern => pattern.test(filePath));
+};
+
+// Polyfills for jsdom environment
+class ResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
+(globalThis as any).ResizeObserver = (globalThis as any).ResizeObserver ?? ResizeObserver;
+(globalThis as any).TextEncoder ??= TextEncoder;
+(globalThis as any).TextDecoder ??= TextDecoder as any;
+(globalThis as any).crypto ??= webcrypto;
 
 // Mock localStorage for tests
 Object.defineProperty(global, 'localStorage', {
