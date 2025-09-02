@@ -39,13 +39,44 @@ import type {
   LeafClassConfigUI,
   CRDFieldMapping
 } from '@/types/leaf-class-builder.types';
-import type {
-  ValidationError,
-  ProvenanceInfo,
-  CRDField,
-  CRDFieldGroup
-} from '@/.upstream/fabric/ui/src/types/fabric';
-import { CRDFieldEditor } from '@/.upstream/fabric/ui/src/components/CRDFieldEditor';
+
+// Temporary type definitions until upstream is available
+type ValidationError = {
+  field: string;
+  message: string;
+  severity: 'error' | 'warning';
+};
+
+type ProvenanceInfo = {
+  source: string;
+  timestamp?: string;
+  user?: string;
+};
+
+type CRDField = {
+  name: string;
+  value: any;
+  type: string;
+  required?: boolean;
+  description?: string;
+  provenance?: ProvenanceInfo;
+};
+
+type CRDFieldGroup = {
+  name: string;
+  fields: CRDField[];
+};
+
+// Placeholder component until upstream is available
+const CRDFieldEditor: React.FC<any> = ({ field, onChange }) => (
+  <div className="p-2 border rounded">
+    <Input 
+      value={field.value || ''} 
+      onChange={(e) => onChange(field.name, e.target.value)}
+      placeholder={field.description}
+    />
+  </div>
+);
 import { cn } from '@/lib/utils';
 
 interface AdvancedCRDDrawerProps {
