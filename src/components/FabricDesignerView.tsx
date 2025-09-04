@@ -13,6 +13,7 @@ import { BreakoutBadge } from '../ui/BreakoutBadge'
 import HistoryView from './HistoryView'
 import { BulkOperationsPanel } from './BulkOperationsPanel'
 import StepperView from './gfd/StepperView'
+import { CapsuleLeafCapability } from '@/capsules/CapsuleLeafCapability'
 
 export const FabricDesignerView: React.FC = () => {
   const [state, send] = useMachine(fabricDesignMachine, {})
@@ -28,6 +29,12 @@ export const FabricDesignerView: React.FC = () => {
     return qp === 'true' || localStorage.getItem('FEATURE_GFD') === 'true'
   }, [])
   const [activeTab, setActiveTab] = useState<'quick' | 'guided'>(gfdEnabled ? 'guided' : 'quick')
+
+  // --- Capsules mount (feature-flagged) ---
+  const capsulesOn =
+    typeof window !== 'undefined' &&
+    (new URLSearchParams(window.location.search).get('FEATURE_CAPSULES') === 'true' ||
+      window.localStorage.getItem('FEATURE_CAPSULES') === 'true')
   
   const handleInputChange = (field: string, value: any) => {
     send({ type: 'UPDATE_CONFIG', data: { [field]: value } })
@@ -697,6 +704,17 @@ export const FabricDesignerView: React.FC = () => {
         isOpen={isHistoryViewOpen}
         onClose={handleCloseHistory}
       />
+      {capsulesOn && (
+        <section style={{ marginTop: 16 }}>
+          <h3>Capsules</h3>
+          <CapsuleLeafCapability
+            spec={config}
+            onSelectLeafModel={(id) =>
+              send({ type: 'UPDATE_CONFIG', data: { leafModelId: id } })
+            }
+          />
+        </section>
+      )}
     </div>
   )
 }
