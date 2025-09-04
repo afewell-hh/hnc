@@ -12,6 +12,7 @@ import { Tooltip, InlineHint, HelpButton } from './GuidedHints'
 import { BreakoutBadge } from '../ui/BreakoutBadge'
 import HistoryView from './HistoryView'
 import { BulkOperationsPanel } from './BulkOperationsPanel'
+import StepperView from './gfd/StepperView'
 
 export const FabricDesignerView: React.FC = () => {
   const [state, send] = useMachine(fabricDesignMachine, {})
@@ -19,6 +20,14 @@ export const FabricDesignerView: React.FC = () => {
   const [isHistoryViewOpen, setIsHistoryViewOpen] = useState(false)
   const [showBulkOperations, setShowBulkOperations] = useState(false)
   const { isGuided, isExpert } = useUserMode()
+  const gfdEnabled = React.useMemo(() => {
+    if (typeof window === 'undefined') return false
+    const params = new URLSearchParams(window.location.search)
+    const qp = params.get('FEATURE_GFD')
+    if (qp) localStorage.setItem('FEATURE_GFD', qp)
+    return qp === 'true' || localStorage.getItem('FEATURE_GFD') === 'true'
+  }, [])
+  const [activeTab, setActiveTab] = useState<'quick' | 'guided'>(gfdEnabled ? 'guided' : 'quick')
   
   const handleInputChange = (field: string, value: any) => {
     send({ type: 'UPDATE_CONFIG', data: { [field]: value } })
@@ -71,16 +80,38 @@ export const FabricDesignerView: React.FC = () => {
   const currentState = String(state.value)
 
   // Check if save is enabled based on issues
-  const canSave = rulesEngineEnabled 
+  const canSave = rulesEngineEnabled
     ? issues.filter(i => i.type === 'error' && !i.overridden && !i.overridable).length === 0
     : computedTopology?.isValid || false
 
+  if (gfdEnabled && activeTab === 'guided') {
+    return (
+      <div
+        className="fabric-design-container"
+        style={{ padding: '20px', maxWidth: '1200px' }}
+        data-testid="fabric-designer-view"
+      >
+        <div style={{ marginBottom: '1rem' }}>
+          <button onClick={() => setActiveTab('quick')}>Quick Form</button>
+          <button onClick={() => setActiveTab('guided')} disabled>Guided</button>
+        </div>
+        <StepperView />
+      </div>
+    )
+  }
+
   return (
-    <div 
-      className="fabric-design-container" 
+    <div
+      className="fabric-design-container"
       style={{ padding: '20px', maxWidth: '1200px' }}
       data-testid="fabric-designer-view"
     >
+      {gfdEnabled && (
+        <div style={{ marginBottom: '1rem' }}>
+          <button onClick={() => setActiveTab('quick')} disabled={activeTab === 'quick'}>Quick Form</button>
+          <button onClick={() => setActiveTab('guided')} disabled={activeTab === 'guided'}>Guided</button>
+        </div>
+      )}
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <div className="state-indicator">
           State: <strong>{currentState}</strong>
@@ -197,7 +228,7 @@ export const FabricDesignerView: React.FC = () => {
                   </span>
                   <input 
                     type="text" 
-                    value={config.name || ''} 
+                    value={config.name ?? ''}
                     onChange={(e) => handleInputChange('name', e.target.value)}
                     style={{ width: '100%', padding: '8px', marginTop: '5px' }} 
                     placeholder="Enter fabric name"
