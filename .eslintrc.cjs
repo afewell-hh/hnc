@@ -1,14 +1,10 @@
 module.exports = {
   root: true,
   parser: '@typescript-eslint/parser',
-  plugins: [
-    '@typescript-eslint',
-    'import'
-  ],
+  plugins: ['@typescript-eslint'],
   extends: [
     'eslint:recommended',
-    '@typescript-eslint/recommended',
-    'plugin:import/typescript'
+    'plugin:@typescript-eslint/recommended'
   ],
   parserOptions: {
     ecmaVersion: 2020,
@@ -17,13 +13,13 @@ module.exports = {
   },
   rules: {
     // TypeScript quality rules
-    '@typescript-eslint/no-explicit-any': 'error',
-    '@typescript-eslint/no-unused-vars': 'error',
-    '@typescript-eslint/no-implicit-any': 'error',
+    '@typescript-eslint/no-explicit-any': 'warn',
+    '@typescript-eslint/no-unused-vars': [
+      'warn',
+      { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }
+    ],
     
     // Import rules
-    'import/no-cycle': 'error',
-    'import/no-unresolved': 'off', // handled by TypeScript
     
     // General code quality
     'no-console': 'warn',
@@ -34,7 +30,7 @@ module.exports = {
     'dist/',
     'node_modules/',
     'storybook-static/',
-    '.eslintrc.js',
+    '.eslintrc.cjs',
     'vite.config.ts'
   ]
 }

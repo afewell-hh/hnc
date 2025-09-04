@@ -13,6 +13,7 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./tests/setup.ts'],
+    css: { postcss: path.resolve(__dirname, 'postcss.config.cjs') },
     testTimeout: 30000, // Avoid brittle timeouts
     exclude: ['**/e2e/**', '**/node_modules/**', '**/tests/_parking/**'],
     coverage: {
